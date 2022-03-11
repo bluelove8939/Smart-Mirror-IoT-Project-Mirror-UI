@@ -12,16 +12,43 @@ import json
 
 apikeys = {}
 
-with open(os.path.join('assets', 'keys', 'apikeys.txt'), 'rt') as keyfile:
-    content = list(map(lambda x: x.split(','), keyfile.readlines()))
+with open(os.path.join('assets', 'keys', 'apikeys.txt'), 'rt') as keyFile:
+    content = list(map(lambda x: x.split(','), keyFile.readlines()))
     for keyname, keycontent in content:
-        apikeys[keyname] = keycontent
+        apikeys[keyname] = keycontent.strip()
 
+
+# Reading settings file
+#
+# Note:
+#   Read UI application settings from settings.txt
+
+applicationSettings = {}
+defaultApplicationSettings = {
+    'lat': '37.56779',  # latitude of Seoul, Korea
+    'lon': '126.97765',  # longitude of Seoul, Korea
+}
+
+with open('settings.txt', 'rt') as settingsFile:
+    content = list(map(lambda x: x.split(','), settingsFile.readlines()))
+
+    for name, value in defaultApplicationSettings.items():  # copy default settings
+        applicationSettings[name] = value
+
+    for name, value in content:  # read settings from settings file
+        applicationSettings[name] = value.strip()
+
+
+# Weather data downloader
+# Note:
+#   Module for downloading weather data from given coordinate
+#   Download weather data from openweathermap API
+#   API link: https://openweathermap.org/
 
 class WeatherDownloader:
     def __init__(self):
-        self.lat = 37.29410404832249
-        self.lon = 126.97533756753458
+        self.lat = float(applicationSettings['lat'])
+        self.lon = float(applicationSettings['lon'])
         self.apikey = apikeys['openweathermap']
 
     def download(self):
