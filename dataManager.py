@@ -7,8 +7,7 @@ import json
 #
 # Note:
 #   API keys is at file named 'assets/keys/apikeys.txt'
-#   Make your own CSV file for API keys
-#   Or manually generate the 'apikeys' dictionary
+#   Make your own CSV file for API keys or just manually generate the 'apikeys' dictionary
 
 apikeys = {}
 
@@ -60,11 +59,11 @@ class WeatherDownloader:
         else:
             assert "HTTP request error occurred"
 
-    def downloadWeatherIcon(self, iconId):
+    def downloadWeatherIcon(self, iconId):  # download icon image from openweathermap api by using iconID
         iconURL = f"http://openweathermap.org/img/wn/{iconId}@2x.png"
         response = requests.get(iconURL)
         if response.status_code == 200:
-            return response.content
+            return response.content  # return image itself
         else:
             assert "HTTP request error occurred"
 
