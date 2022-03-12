@@ -8,13 +8,16 @@ import json
 # Note:
 #   API keys is at file named 'assets/keys/apikeys.txt'
 #   Make your own CSV file for API keys or just manually generate the 'apikeys' dictionary
+#
+# Included Keys:
+#   - openweathermap
 
 apikeys = {}
 
 with open(os.path.join('assets', 'keys', 'apikeys.txt'), 'rt') as keyFile:
     content = list(map(lambda x: x.split(','), keyFile.readlines()))
     for keyname, keycontent in content:
-        apikeys[keyname] = keycontent.strip()
+        apikeys[keyname.strip()] = keycontent.strip()
 
 
 # Reading settings file
@@ -35,7 +38,7 @@ with open('settings.txt', 'rt') as settingsFile:
         applicationSettings[name] = value
 
     for name, value in content:  # read settings from settings file
-        applicationSettings[name] = value.strip()
+        applicationSettings[name.strip()] = value.strip()
 
 
 # Weather data downloader

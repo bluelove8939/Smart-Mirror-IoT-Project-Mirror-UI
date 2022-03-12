@@ -15,6 +15,8 @@ from dataManager import WeatherDownloader
 
 
 # Main user interface
+#
+# Note:
 #   Indicates information about current datetime, scheudles, weather ...
 
 class MyApp(QWidget):
@@ -36,9 +38,9 @@ class MyApp(QWidget):
         self.dateTimeWidget.setStyleSheet("color: white; font-size: 36px; font-weight: bold")
 
         # Run timer (time widget)
-        timer = QTimer(self)  # run timer widget
+        timer = QTimer(self)                  # generate timer widget
         timer.timeout.connect(self.showTime)  # refresh label widget when timeout called
-        timer.start(1000)
+        timer.start(1000)                     # run timer widget
 
         # Schedule widget
         self.scheduleWidget = self.generateScheduleWidget()
@@ -88,6 +90,8 @@ class MyApp(QWidget):
 
     def generateWeatherWidget(self):
         groupbox = QGroupBox()
+        groupbox.setMaximumWidth(210)
+        groupbox.setFixedHeight(250)
         groupbox.setStyleSheet('background-color: grey;'
                                "border-style: solid;"
                                "border-width: 2px;"
@@ -111,8 +115,7 @@ class MyApp(QWidget):
         weatherIconwidget = QLabel()
         weatherIconwidget.setPixmap(weatherIconPixmap)
 
-
-        # Set style of generated wub widgets
+        # Set style of generated sub widgets
         cityNameWidget.setStyleSheet('font-size: 13pt; font-weight: bold')
         temperatureWidget.setStyleSheet('font-size: 13pt; font-weight: bold')
         humidityWidget.setStyleSheet('font-size: 13pt; font-weight: bold')
@@ -144,7 +147,8 @@ if __name__ == '__main__':
     fontFilenames = [filename for filename in os.listdir(fontDirname) if
                      os.path.isfile(os.path.join(fontDirname, filename))]
     fontIds = []
-    for targetFilename in fontFilenames: fontIds.append(QFontDatabase.addApplicationFont(os.path.join(fontDirname, targetFilename)))
+    for targetFilename in fontFilenames:
+        fontIds.append(QFontDatabase.addApplicationFont(os.path.join(fontDirname, targetFilename)))
     app.setFont(QFont('SUIT'))
 
 
