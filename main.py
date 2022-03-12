@@ -33,18 +33,18 @@ class MyApp(QWidget):
         # Time widget
         self.dateTimeWidget = QLabel()
         self.dateTimeWidget.setAlignment(Qt.AlignCenter)
-        self.dateTimeWidget.setStyleSheet("color: white; font-size: 36px")
+        self.dateTimeWidget.setStyleSheet("color: white; font-size: 36px; font-weight: bold")
+
+        # Run timer (time widget)
+        timer = QTimer(self)  # run timer widget
+        timer.timeout.connect(self.showTime)  # refresh label widget when timeout called
+        timer.start(1000)
 
         # Schedule widget
         self.scheduleWidget = self.generateScheduleWidget()
 
         # Weather widget
         self.weatherWidget = self.generateWeatherWidget()
-
-        # Run timer (time widget)
-        timer = QTimer(self)  # run timer widget
-        timer.timeout.connect(self.showTime)  # refresh label widget when timeout called
-        timer.start(1000)
 
         # Generating layout
         mainLayout = QVBoxLayout()
@@ -64,13 +64,13 @@ class MyApp(QWidget):
         self.show()
 
     def showTime(self):
-        currentTime = QTime.currentTime().toString('hh:mm:ss')
+        currentTime = QTime.currentTime().toString('hh:mm')
         currentDate = QDate.currentDate().toString('yyyy-MM-dd dddd')
         self.dateTimeWidget.setText(f'{currentDate} {currentTime}')  # change timeWidget
 
     def generateScheduleWidget(self):
         groupbox = QGroupBox()
-        groupbox.setFixedWidth(250)
+        groupbox.setMaximumWidth(250)
         groupbox.setStyleSheet('background-color: grey;'
                                "border-style: solid;"
                                "border-width: 2px;"
@@ -88,7 +88,6 @@ class MyApp(QWidget):
 
     def generateWeatherWidget(self):
         groupbox = QGroupBox()
-        groupbox.setFixedWidth(250)
         groupbox.setStyleSheet('background-color: grey;'
                                "border-style: solid;"
                                "border-width: 2px;"
@@ -136,14 +135,19 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = MyApp()
 
-    # Set font as SUIT
+
+    # Set font as 'SUIT'
     #   This font is open-source font from the link below
     #   URL: https://sunn.us/suit/
+
     fontDirname = os.path.join(os.getcwd(), 'assets', 'fonts')
     fontFilenames = [filename for filename in os.listdir(fontDirname) if
                      os.path.isfile(os.path.join(fontDirname, filename))]
     fontIds = []
     for targetFilename in fontFilenames: fontIds.append(QFontDatabase.addApplicationFont(os.path.join(fontDirname, targetFilename)))
     app.setFont(QFont('SUIT'))
+
+
+    # Running the application
 
     sys.exit(app.exec_())

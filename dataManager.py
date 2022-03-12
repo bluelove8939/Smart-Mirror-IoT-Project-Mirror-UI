@@ -39,6 +39,7 @@ with open('settings.txt', 'rt') as settingsFile:
 
 
 # Weather data downloader
+#
 # Note:
 #   Module for downloading weather data from given coordinate
 #   Download weather data from openweathermap API
@@ -46,8 +47,8 @@ with open('settings.txt', 'rt') as settingsFile:
 
 class WeatherDownloader:
     def __init__(self):
-        self.lat = float(applicationSettings['lat'])
-        self.lon = float(applicationSettings['lon'])
+        self.lat = applicationSettings['lat']
+        self.lon = applicationSettings['lon']
         self.apikey = apikeys['openweathermap']
 
     def download(self):
