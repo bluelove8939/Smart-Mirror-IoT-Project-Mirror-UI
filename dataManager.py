@@ -1,6 +1,15 @@
+import io
 import os
 import requests
 import json
+import os.path
+
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.errors import HttpError
 
 
 # Reading required apikeys
@@ -71,3 +80,100 @@ class WeatherDownloader:
         else:
             assert "HTTP request error occurred"
 
+
+# Schedule data downloader
+#
+# Note:
+#   Module for downloading scheudle data from user's private google drive storage
+#   Download schedule data via Google Drive API (v3)
+#   API link: https://developers.google.com/drive/api/v3/about-files
+
+rootDirName = 'Ice Cream Hub'
+scheduleDirName = 'Schedules'
+driveFolderType = 'application/vnd.google-apps.folder'
+driveTextFileType = 'text/plain'
+
+class ScheduleDownloader:
+    def __init__(self):
+        self.drivescope = ['https://www.googleapis.com/auth/drive.readonly']
+        self.googleclientIDfilename = apikeys['googleclientfilename']
+
+    def download(self, targetDate):
+        # Generate user_account_tokens directory
+        os.mkdir(os.path.join('assets', 'user_account_tokens'))
+
+        # Generate login token via web browser
+        tokenpath = os.path.join('assets', 'user_account_tokens', 'token.json')
+        creds = None
+        if os.path.exists(tokenpath):
+            creds = Credentials.from_authorized_user_file(tokenpath, self.drivescope)
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(f'assets/keys/{self.googleclientIDfilename}', self.drivescope)
+                creds = flow.run_local_server(port=0)
+            print(creds.to_json())
+            with open(tokenpath, 'w') as token:
+                token.write(creds.to_json())
+
+        try:
+            service = build('drive', 'v3', credentials=creds)
+
+            # Find out application root folder ID
+            results = service.files().list(
+                q=f"mimeType = '{driveFolderType}' and name = '{rootDirName}' and trashed = false",
+                spaces='drive',
+                fields='nextPageToken, files(id, name)').execute()
+            items = results.get('files', [])
+            if not items:
+                return []
+            rootDirID = items[0]['id']
+
+            # Find out schedule folder
+            results = service.files().list(
+                q=f"mimeType = '{driveFolderType}' and name = '{scheduleDirName}' and trashed = false and '{rootDirID}' in parents",
+                spaces='drive',
+                fields='nextPageToken, files(id, name)').execute()
+            items = results.get('files', [])
+            if not items:
+                return []
+            scheduleDirID = items[0]['id']
+
+            # Find out target file ID
+            results = service.files().list(
+                q=f"name = '{targetDate}.csv' and trashed = false and '{scheduleDirID}' in parents",
+                spaces='drive',
+                fields='nextPageToken, files(id, name)').execute()
+            items = results.get('files', [])
+            if not items:
+                return []
+            targetFileID = items[0]['id']
+
+            # Download target file
+            request = service.files().get_media(fileId=targetFileID)
+            fh = io.BytesIO()
+            downloader = MediaIoBaseDownload(fh, request)
+            done = False
+            while done is False:
+                status, done = downloader.next_chunk()
+                print("Download %d%%." % int(status.progress() * 100))
+
+            # Parse downloaded content and return the data
+            content = str(fh.getvalue(), 'utf-8')
+            parsed = []
+            for line in content.split('\n'):
+                parsed.append(line.split(','))
+
+            print(content, parsed)
+
+            return parsed
+
+        except HttpError as error:
+            print(f'An error occurred: {error}')
+
+
+# testbenches
+if __name__ == '__main__':
+    scheduleDownloader = ScheduleDownloader()
+    scheduleDownloader.download('2022-03-16')

@@ -11,7 +11,7 @@ from PyQt5.QtCore import Qt             # Qt.AlignCenter
 
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
-from dataManager import WeatherDownloader
+from dataManager import WeatherDownloader, ScheduleDownloader
 
 
 # Main user interface
@@ -25,6 +25,7 @@ class MyApp(QWidget):
 
         # Global variables
         self.weatherDownloader = WeatherDownloader()
+        self.scheduleDownloader = ScheduleDownloader()
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
@@ -72,25 +73,40 @@ class MyApp(QWidget):
 
     def generateScheduleWidget(self):
         groupbox = QGroupBox()
-        groupbox.setMaximumWidth(250)
+        groupbox.setFixedWidth(210)
+        # groupbox.setFixedHeight(250)
         groupbox.setStyleSheet('background-color: grey;'
                                "border-style: solid;"
                                "border-width: 2px;"
                                "border-color: grey;"
                                "border-radius: 15px")
 
-        label = QLabel('schedules')
+        scheduleDataList = self.scheduleDownloader.download(QDate.currentDate().toString('yyyy-MM-dd'))
+
+        titleLabel = QLabel("일정")
+        titleLabel.setStyleSheet('font-size: 13pt; font-weight: bold')
+
+        labels = [titleLabel]
+        for schedule in scheduleDataList:
+            label = QLabel(schedule[0])
+            if schedule[1] == '1':
+                label.setStyleSheet('font-size: 11pt; font-weight: bold; text-decoration: line-through')
+            else:
+                label.setStyleSheet('font-size: 11pt; font-weight: bold')
+            labels.append(label)
 
         vbox = QVBoxLayout()
-        vbox.addWidget(label)
+        for widget in labels:
+            vbox.addWidget(widget)
         vbox.setContentsMargins(20, 20, 20, 20)
+        vbox.addStretch(1)
         groupbox.setLayout(vbox)
 
         return groupbox
 
     def generateWeatherWidget(self):
         groupbox = QGroupBox()
-        groupbox.setMaximumWidth(210)
+        groupbox.setFixedWidth(210)
         groupbox.setFixedHeight(250)
         groupbox.setStyleSheet('background-color: grey;'
                                "border-style: solid;"
