@@ -165,8 +165,6 @@ class ScheduleDownloader:
             for line in content.split('\n'):
                 parsed.append(line.split(','))
 
-            print(content, parsed)
-
             return parsed
 
         except HttpError as error:
