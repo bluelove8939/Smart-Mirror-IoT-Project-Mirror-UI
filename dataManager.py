@@ -100,7 +100,8 @@ class ScheduleDownloader:
 
     def download(self, targetDate):
         # Generate user_account_tokens directory
-        os.mkdir(os.path.join('assets', 'user_account_tokens'))
+        if 'user_account_tokens' not in os.listdir('assets'):
+            os.mkdir(os.path.join('assets', 'user_account_tokens'))
 
         # Generate login token via web browser
         tokenpath = os.path.join('assets', 'user_account_tokens', 'token.json')
@@ -169,9 +170,3 @@ class ScheduleDownloader:
 
         except HttpError as error:
             print(f'An error occurred: {error}')
-
-
-# testbenches
-if __name__ == '__main__':
-    scheduleDownloader = ScheduleDownloader()
-    scheduleDownloader.download('2022-03-16')

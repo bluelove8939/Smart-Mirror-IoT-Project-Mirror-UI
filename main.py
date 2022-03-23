@@ -83,7 +83,7 @@ class MyApp(QWidget):
 
         scheduleDataList = self.scheduleDownloader.download(QDate.currentDate().toString('yyyy-MM-dd'))
 
-        titleLabel = QLabel("일정")
+        titleLabel = QLabel("일정" if len(scheduleDataList) > 0 else "일정을 추가하세요")
         titleLabel.setStyleSheet('font-size: 13pt; font-weight: bold')
 
         labels = [titleLabel]
@@ -96,6 +96,9 @@ class MyApp(QWidget):
             labels.append(label)
 
         vbox = QVBoxLayout()
+        if len(scheduleDataList) == 0:
+            vbox.setAlignment(Qt.AlignCenter)
+            vbox.addStretch(1)
         for widget in labels:
             vbox.addWidget(widget)
         vbox.setContentsMargins(20, 20, 20, 20)
