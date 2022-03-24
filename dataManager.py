@@ -170,3 +170,16 @@ class ScheduleDownloader:
 
         except HttpError as error:
             print(f'An error occurred: {error}')
+
+
+# Bluetooth controlller
+#
+# Note:
+#   Module for connecting with android app via bluetooth
+#   Uses pybluez library (targetted on rasbian and linux OS)
+#   Dependencies can be obtained by running command below:
+#     => bash raspberry-bluetooth-setup.sh
+
+class bluetoothController:
+    def __init__(self):
+        pass
