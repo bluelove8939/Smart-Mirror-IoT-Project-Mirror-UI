@@ -190,6 +190,14 @@ class BluetoothController:
 
         self.port = self.server_sock.getsockname()[1]
 
+        uuid = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
+
+        bluetooth.advertise_service(
+            self.server_sock, "Smart Mirror SSS001 service", service_id=uuid,
+            service_classes=[uuid, bluetooth.SERIAL_PORT_CLASS],
+            profiles=[bluetooth.SERIAL_PORT_PROFILE],
+        )
+
     
     def receive(self):
         print(f'Waiting for connection: channel {self.port}')
@@ -205,7 +213,14 @@ class BluetoothController:
 
                 print(f'==== received data: {data}')
 
-                client_sock.send(data[::-1])
+                decodedData = json.loads(data)
+
+                print(f'==== {decodedData.keys()}')
+
+                for key in decodedData.keys():
+                    print(f'==== {decodedData[key]}: {type(decodedData[key])}')
+
+                client_sock.send(data)
             
             except IOError or KeyboardInterrupt:
                 print('Client disconnected')
@@ -216,4 +231,5 @@ class BluetoothController:
 
 if __name__ == '__main__':
     bluetoothController = BluetoothController()
-    bluetoothController.receive()  # Receive
+    while True:
+        bluetoothController.receive()  # Receive
