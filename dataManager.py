@@ -215,10 +215,8 @@ class BluetoothController:
 
                 decodedData = json.loads(data)
 
-                print(f'==== {decodedData.keys()}')
-
                 for key in decodedData.keys():
-                    print(f'==== {decodedData[key]}: {type(decodedData[key])}')
+                    print(f'==== {key}: {decodedData[key]}    type: {type(decodedData[key])}')
 
                 client_sock.send(data)
             
