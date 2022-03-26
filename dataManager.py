@@ -11,6 +11,8 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
 
+import bluetooth  # pybluez library
+
 
 # Reading required apikeys
 #
@@ -180,6 +182,38 @@ class ScheduleDownloader:
 #   Dependencies can be obtained by running command below:
 #     => bash raspberry-bluetooth-setup.sh
 
-class bluetoothController:
+class BluetoothController:
     def __init__(self):
-        pass
+        self.server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+        self.server_sock.bind(('', bluetooth.PORT_ANY))
+        self.server_sock.listen(1)
+
+        self.port = self.server_sock.getsockname()[1]
+
+    
+    def receive(self):
+        print(f'Waiting for connection: channel {self.port}')
+        client_sock, client_info = self.server_sock.accept()
+
+        while True:
+            print(f'Client accepted: {client_info}')
+            try:
+                data = client_sock.recv(1024)
+                
+                if len(data) == 0:
+                    break
+
+                print(f'==== received data: {data}')
+
+                client_sock.send(data[::-1])
+            
+            except IOError or KeyboardInterrupt:
+                print('Client disconnected')
+                client_sock.close()
+                break
+
+
+
+if __name__ == '__main__':
+    bluetoothController = BluetoothController()
+    bluetoothController.receive()

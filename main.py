@@ -11,7 +11,7 @@ from PyQt5.QtCore import Qt             # Qt.AlignCenter
 
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
-from dataManager import WeatherDownloader, ScheduleDownloader
+from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController
 
 
 # Main user interface
@@ -26,6 +26,7 @@ class MyApp(QWidget):
         # Global variables
         self.weatherDownloader = WeatherDownloader()
         self.scheduleDownloader = ScheduleDownloader()
+        self.bluetoothController = BluetoothController()
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
