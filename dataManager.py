@@ -216,4 +216,4 @@ class BluetoothController:
 
 if __name__ == '__main__':
     bluetoothController = BluetoothController()
-    bluetoothController.receive()
+    bluetoothController.receive()  # Receive
