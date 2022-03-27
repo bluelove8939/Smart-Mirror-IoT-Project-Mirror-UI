@@ -51,6 +51,16 @@ with open('settings.txt', 'rt') as settingsFile:
     for name, value in content:  # read settings from settings file
         applicationSettings[name.strip()] = value.strip()
 
+def changeSettings(name, value):
+    applicationSettings[name] = value
+
+def saveSettings():
+    with open('settings.txt', 'wt') as settingsFile:
+        content = []
+        for name, value in applicationSettings.items():
+            content.append(f'{name},{value}')
+        settingsFile.write('\n'.join(content))
+
 
 # Weather data downloader
 #
@@ -64,6 +74,10 @@ class WeatherDownloader:
         self.lat = applicationSettings['lat']
         self.lon = applicationSettings['lon']
         self.apikey = apikeys['openweathermap']
+
+    def refreshLocation(self):
+        self.lat = applicationSettings['lat']
+        self.lon = applicationSettings['lon']
 
     def download(self):
         URL = f'http://api.openweathermap.org/data/2.5/weather?lat={self.lat}&lon={self.lon}&appid={self.apikey}&lang=kr&units=metric'
@@ -198,36 +212,45 @@ class BluetoothController:
             profiles=[bluetooth.SERIAL_PORT_PROFILE],
         )
 
+        self.client_sock = None
+        self.client_info = None
+
+    def connect(self):
+        print(f'Waiting for connection: channel {self.port}')
+        self.client_sock, self.client_info = self.server_sock.accept()
+        print(f'Client accepted: {self.client_info}')
+
     
     def receive(self):
-        print(f'Waiting for connection: channel {self.port}')
-        client_sock, client_info = self.server_sock.accept()
+        try:
+            data = self.client_sock.recv(1024)
+            decodedData = json.loads(data)
+            return decodedData
+        
+        except IOError or KeyboardInterrupt:
+            print('Client disconnected')
+            self.client_sock.close()
+            return None
+    
+    def send(self, decodedData):
+        try:
+            data = json.dumps(decodedData, separators=(',', ':'))
+            self.client_sock.send(data)
+            print(data)
 
-        while True:
-            print(f'Client accepted: {client_info}')
-            try:
-                data = client_sock.recv(1024)
-                
-                if len(data) == 0:
-                    break
+        except IOError or KeyboardInterrupt:
+            print('Client disconnected')
+            self.client_sock.close()
+            return None
 
-                print(f'==== received data: {data}')
-
-                decodedData = json.loads(data)
-
-                for key in decodedData.keys():
-                    print(f'==== {key}: {decodedData[key]}    type: {type(decodedData[key])}')
-
-                client_sock.send(data)
-            
-            except IOError or KeyboardInterrupt:
-                print('Client disconnected')
-                client_sock.close()
-                break
 
 
 
 if __name__ == '__main__':
     bluetoothController = BluetoothController()
     while True:
-        bluetoothController.receive()  # Receive
+        bluetoothController.connect()
+        while True:
+            token = bluetoothController.receive()  # Receive
+            if token is None:
+                break

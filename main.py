@@ -4,14 +4,46 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtWidgets import QLabel, QGroupBox
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout  # Layouts
+from PyQt5.QtWidgets import qApp  # qApp.processEvents()
 
+from PyQt5 import QtCore
 from PyQt5.QtCore import QDate          # Date widgets
 from PyQt5.QtCore import QTime, QTimer  # Time widgets
 from PyQt5.QtCore import Qt             # Qt.AlignCenter
+from PyQt5.QtCore import QThread
 
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
 from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController
+from dataManager import changeSettings, saveSettings
+
+
+# Bluetooth thread
+#
+# Note:
+#   Receives token from smartphone application and sends response token
+
+class BluetoothThread(QThread):
+    threadEvent = QtCore.pyqtSignal(dict)
+
+    def __init__(self):
+        super().__init__()
+        self.controller = BluetoothController()
+    
+    def run(self):
+        while True:
+            self.controller.connect()
+            while True:
+                token = self.controller.receive()
+                if token is None:
+                    break
+                else:
+                    sendToken = self.generateSendToken(token)
+                    self.controller.send(sendToken)
+                    self.threadEvent.emit(token)
+    
+    def generateSendToken(self, token):
+        return token
 
 
 # Main user interface
@@ -26,13 +58,13 @@ class MyApp(QWidget):
         # Global variables
         self.weatherDownloader = WeatherDownloader()
         self.scheduleDownloader = ScheduleDownloader()
-        self.bluetoothController = BluetoothController()
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
         self.setWindowIcon(QIcon('assets/title_icon.png'))
         self.setStyleSheet('background-color:black;')
         self.setGeometry(0, 0, 700, 1000)
+        self.updatesEnabled = True
 
         # Time widget
         self.dateTimeWidget = QLabel()
@@ -44,6 +76,18 @@ class MyApp(QWidget):
         timer.timeout.connect(self.showTime)  # refresh label widget when timeout called
         timer.start(1000)                     # run timer widget
 
+        # Generate main window layout
+        self.drawWindow()
+
+        # Run bluetooth thread
+        self.bluetoothThread = BluetoothThread()
+        self.bluetoothThread.start()
+        self.bluetoothThread.threadEvent.connect(self.takeAction)
+
+        # self.showFullScreen()
+        self.show()
+
+    def drawWindow(self):
         # Schedule widget
         self.scheduleWidget = self.generateScheduleWidget()
 
@@ -63,9 +107,6 @@ class MyApp(QWidget):
         mainLayout.addLayout(bottomLayout)
 
         self.setLayout(mainLayout)
-
-        # self.showFullScreen()
-        self.show()
 
     def showTime(self):
         currentTime = QTime.currentTime().toString('hh:mm')
@@ -153,6 +194,15 @@ class MyApp(QWidget):
 
         return groupbox
 
+    @QtCore.pyqtSlot(dict)
+    def takeAction(self, token):
+        if token['type'] == 'set_location':
+            changeSettings('lat', token['args'][0])
+            changeSettings('lon', token['args'][1])
+            saveSettings()
+            self.weatherDownloader.refreshLocation()
+            self.update()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -173,5 +223,4 @@ if __name__ == '__main__':
 
 
     # Running the application
-
     sys.exit(app.exec_())
