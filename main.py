@@ -4,7 +4,7 @@ import sys
 from PyQt5 import sip
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtWidgets import QLabel, QGroupBox
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QLayout  # Layouts
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout  # Layouts
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate          # Date widgets
@@ -15,7 +15,13 @@ from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
 from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController
-from dataManager import changeSettings, saveSettings, getSettings
+from dataManager import changeSettings, saveSettings, getSettings, weekDay, lastDay
+
+
+# Widget styles
+
+widgetDefaultStyleSheet = 'background-color: black; border-style: solid; border-color: white; border-width: 0.5px; border-radius: 10px;'
+labelDefaultStyleSheet = 'border-style: none;'
 
 
 # Bluetooth thread
@@ -64,7 +70,7 @@ class MyApp(QWidget):
         self.setWindowTitle('Smart Mirror System')
         self.setWindowIcon(QIcon('assets/title_icon.png'))
         self.setStyleSheet('background-color:black;')
-        self.setGeometry(0, 0, 700, 1000)
+        self.setGeometry(0, 0, 1400, 1000)
         self.updatesEnabled = True
 
         # Time widget
@@ -78,6 +84,9 @@ class MyApp(QWidget):
         timer.start(1000)                     # run timer widget
 
         # Generate main window layout
+        self.scheduleWidget = None  # schedule widget
+        self.weatherWidget = None   # weather widget
+        self.calendarWidget = None  # calendar widget
         self.mainLayout = None
         self.drawWindow()  # generate main layout and set widget layout as main layout
 
@@ -96,6 +105,9 @@ class MyApp(QWidget):
         # Weather widget
         self.weatherWidget = self.generateWeatherWidget()
 
+        # Calendar widget
+        self.calendarWidget = self.generateCalenderWidget()
+
         # Generating layout
         self.mainLayout = QVBoxLayout()
         self.mainLayout.setContentsMargins(20, 20, 20, 20)
@@ -104,6 +116,8 @@ class MyApp(QWidget):
 
         bottomLayout = QHBoxLayout()
         bottomLayout.addWidget(self.weatherWidget)
+        bottomLayout.addStretch(1)
+        bottomLayout.addWidget(self.calendarWidget)
         bottomLayout.addStretch(1)
         bottomLayout.addWidget(self.scheduleWidget)
         self.mainLayout.addLayout(bottomLayout)
@@ -123,24 +137,23 @@ class MyApp(QWidget):
         groupbox = QGroupBox()
         groupbox.setFixedWidth(210)
         # groupbox.setFixedHeight(250)
-        groupbox.setStyleSheet('background-color: grey;'
-                               "border-style: solid;"
-                               "border-width: 2px;"
-                               "border-color: grey;"
-                               "border-radius: 15px")
+        groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
         scheduleDataList = self.scheduleDownloader.download(QDate.currentDate().toString('yyyy-MM-dd'))
 
         titleLabel = QLabel("일정" if len(scheduleDataList) > 0 else "일정을 추가하세요")
-        titleLabel.setStyleSheet('font-size: 13pt; font-weight: bold')
+        titleLabel.setStyleSheet(labelDefaultStyleSheet + 
+            'color: white; font-size: 13pt; font-weight: bold; border-style: none;')
 
         labels = [titleLabel]
         for schedule in scheduleDataList:
             label = QLabel(schedule[0])
             if schedule[1] == '1':
-                label.setStyleSheet('font-size: 11pt; font-weight: bold; text-decoration: line-through')
+                label.setStyleSheet(labelDefaultStyleSheet + 
+                    'color: white; font-size: 11pt; font-weight: bold; text-decoration: line-through;')
             else:
-                label.setStyleSheet('font-size: 11pt; font-weight: bold')
+                label.setStyleSheet(labelDefaultStyleSheet + 
+                    'color: white; font-size: 11pt; font-weight: bold; border-style: none;')
             labels.append(label)
 
         vbox = QVBoxLayout()
@@ -159,11 +172,7 @@ class MyApp(QWidget):
         groupbox = QGroupBox()
         groupbox.setFixedWidth(210)
         groupbox.setFixedHeight(260)
-        groupbox.setStyleSheet('background-color: grey;'
-                               "border-style: solid;"
-                               "border-width: 2px;"
-                               "border-color: grey;"
-                               "border-radius: 15px")
+        groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
         # Download weather data
         weatherDataJson = self.weatherDownloader.download()
@@ -184,11 +193,12 @@ class MyApp(QWidget):
         weatherIconwidget.setPixmap(weatherIconPixmap)
 
         # Set style of generated sub widgets
-        cityNameWidget.setStyleSheet('font-size: 13pt; font-weight: bold')
-        temperatureWidget.setStyleSheet('font-size: 13pt; font-weight: bold')
-        humidityWidget.setStyleSheet('font-size: 13pt; font-weight: bold')
-        minMaxTemperatureWidget.setStyleSheet('font-size: 10pt; font-weight: bold')
-        refreshedTimeWidget.setStyleSheet('font-size: 10pt; font-weight: normal')
+        cityNameWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 13pt; font-weight: bold; color: white;')
+        temperatureWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 13pt; font-weight: bold; color: white;')
+        humidityWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 13pt; font-weight: bold; color: white;')
+        minMaxTemperatureWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 10pt; font-weight: bold; color: white;')
+        refreshedTimeWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 10pt; font-weight: normal;  color: white;')
+        weatherIconwidget.setStyleSheet('border-style: none')
 
         # Generate layouts fo subwidgets and return weather widget
         vbox = QVBoxLayout()
@@ -202,6 +212,74 @@ class MyApp(QWidget):
         groupbox.setLayout(vbox)
 
         return groupbox
+
+    def generateCalenderWidget(self):
+        groupbox = QGroupBox()
+        groupbox.setFixedWidth(240)
+        groupbox.setStyleSheet(widgetDefaultStyleSheet)
+        
+        today = QDate.currentDate()
+        targetMonth = today.month()
+        targetYear = today.year()
+
+        # Generate calender layouts
+        vbox = QVBoxLayout()  # main layout
+        vbox.addStretch(1)
+        
+        # 1. Layout for calender header
+        calenderHeaderLabel = QLabel(f'{targetYear}년 {targetMonth}월')
+        calenderHeaderLabel.setStyleSheet(labelDefaultStyleSheet + 'font-size: 13pt; font-weight: bold; color: white;')
+        headerLayout = QHBoxLayout()
+        headerLayout.addStretch(1)
+        headerLayout.addWidget(calenderHeaderLabel)
+        headerLayout.addStretch(1)
+        vbox.addStretch(1)
+        vbox.addLayout(headerLayout)
+        vbox.addStretch(1)
+        
+        
+        # 2. Layout for weekdays
+        calenderBodyGridLayout = QGridLayout()
+        weekdayNames = ['일', '월', '화', '수', '목', '금', '토']
+
+        for cidx, name in enumerate(weekdayNames):
+            lbl = QLabel(name)
+            if cidx == 0:
+                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: red;')
+            else:
+                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: white;')
+            calenderBodyGridLayout.addWidget(lbl, 0, cidx)
+        
+
+        # 3. Layout for calender body
+        ridx, cidx = 1, weekDay(targetYear, targetMonth, 1)
+        
+        for targetDay in range(1, lastDay(targetYear, targetMonth)+1):  
+            lbl = QLabel(str(targetDay))
+            if cidx == 0:
+                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: red;')
+            elif QDate.currentDate() == QDate(targetYear, targetMonth, targetDay):
+                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: black; background-color: white;')
+            else:
+                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: white;')
+            calenderBodyGridLayout.addWidget(lbl, ridx, cidx)
+            cidx += 1
+            
+            if cidx == 7:
+                ridx += 1
+                cidx = 0
+        
+        calenderBodyLayout = QHBoxLayout()
+        calenderBodyLayout.addStretch(1)
+        calenderBodyLayout.addLayout(calenderBodyGridLayout)
+        calenderBodyLayout.addStretch(1)
+        vbox.addLayout(calenderBodyLayout)
+        vbox.addStretch(1)
+        vbox.setContentsMargins(20, 0, 20, 20)
+        groupbox.setLayout(vbox)
+
+        return groupbox
+
 
     def deleteLayout(self, cur_lay):
         if cur_lay is not None:
