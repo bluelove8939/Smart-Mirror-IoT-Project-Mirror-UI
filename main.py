@@ -1,10 +1,10 @@
 import os
 import sys
 
+from PyQt5 import sip
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtWidgets import QLabel, QGroupBox
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout  # Layouts
-from PyQt5.QtWidgets import qApp  # qApp.processEvents()
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QLayout  # Layouts
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import QDate          # Date widgets
@@ -15,7 +15,7 @@ from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
 from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController
-from dataManager import changeSettings, saveSettings
+from dataManager import changeSettings, saveSettings, getSettings
 
 
 # Bluetooth thread
@@ -56,6 +56,7 @@ class MyApp(QWidget):
         super().__init__()
 
         # Global variables
+        self.refreshedTime = QTime.currentTime()
         self.weatherDownloader = WeatherDownloader()
         self.scheduleDownloader = ScheduleDownloader()
 
@@ -77,7 +78,8 @@ class MyApp(QWidget):
         timer.start(1000)                     # run timer widget
 
         # Generate main window layout
-        self.drawWindow()
+        self.mainLayout = None
+        self.drawWindow()  # generate main layout and set widget layout as main layout
 
         # Run bluetooth thread
         self.bluetoothThread = BluetoothThread()
@@ -95,24 +97,28 @@ class MyApp(QWidget):
         self.weatherWidget = self.generateWeatherWidget()
 
         # Generating layout
-        mainLayout = QVBoxLayout()
-        mainLayout.setContentsMargins(20, 20, 20, 20)
-        mainLayout.addWidget(self.dateTimeWidget)
-        mainLayout.addStretch(1)
+        self.mainLayout = QVBoxLayout()
+        self.mainLayout.setContentsMargins(20, 20, 20, 20)
+        self.mainLayout.addWidget(self.dateTimeWidget)
+        self.mainLayout.addStretch(1)
 
         bottomLayout = QHBoxLayout()
         bottomLayout.addWidget(self.weatherWidget)
         bottomLayout.addStretch(1)
         bottomLayout.addWidget(self.scheduleWidget)
-        mainLayout.addLayout(bottomLayout)
+        self.mainLayout.addLayout(bottomLayout)
 
-        self.setLayout(mainLayout)
+        self.setLayout(self.mainLayout)
 
     def showTime(self):
         currentTime = QTime.currentTime().toString('hh:mm')
         currentDate = QDate.currentDate().toString('yyyy-MM-dd dddd')
         self.dateTimeWidget.setText(f'{currentDate} {currentTime}')  # change timeWidget
 
+        refreshTerm = getSettings('refresh_term')
+        if (self.refreshedTime.secsTo(QTime.currentTime()) // 60) >= refreshTerm:
+            self.refresh()
+        
     def generateScheduleWidget(self):
         groupbox = QGroupBox()
         groupbox.setFixedWidth(210)
@@ -152,7 +158,7 @@ class MyApp(QWidget):
     def generateWeatherWidget(self):
         groupbox = QGroupBox()
         groupbox.setFixedWidth(210)
-        groupbox.setFixedHeight(250)
+        groupbox.setFixedHeight(260)
         groupbox.setStyleSheet('background-color: grey;'
                                "border-style: solid;"
                                "border-width: 2px;"
@@ -167,6 +173,7 @@ class MyApp(QWidget):
         temperatureWidget = QLabel(f"현재기온 {str(weatherDataJson.get('main').get('temp'))}°C")
         minMaxTemperatureWidget = QLabel(f"(최소 {str(weatherDataJson.get('main').get('temp_min'))}°C 최대 {str(weatherDataJson.get('main').get('temp_max'))}°C)")
         humidityWidget = QLabel(f"습도 {str(weatherDataJson.get('main').get('humidity'))}%")
+        refreshedTimeWidget = QLabel(f"{self.refreshedTime.toString('hh:mm:ss')}에 새로고침 됨")
 
         # Generate weather icon widget
         weatherIconImage = QImage()
@@ -181,6 +188,7 @@ class MyApp(QWidget):
         temperatureWidget.setStyleSheet('font-size: 13pt; font-weight: bold')
         humidityWidget.setStyleSheet('font-size: 13pt; font-weight: bold')
         minMaxTemperatureWidget.setStyleSheet('font-size: 10pt; font-weight: bold')
+        refreshedTimeWidget.setStyleSheet('font-size: 10pt; font-weight: normal')
 
         # Generate layouts fo subwidgets and return weather widget
         vbox = QVBoxLayout()
@@ -189,10 +197,27 @@ class MyApp(QWidget):
         vbox.addWidget(temperatureWidget)
         vbox.addWidget(minMaxTemperatureWidget)
         vbox.addWidget(humidityWidget)
+        vbox.addWidget(refreshedTimeWidget)
         vbox.setContentsMargins(20, 0, 20, 20)
         groupbox.setLayout(vbox)
 
         return groupbox
+
+    def deleteLayout(self, cur_lay):
+        if cur_lay is not None:
+            while cur_lay.count():
+                item = cur_lay.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.setParent(None)
+                else:
+                    self.deleteLayout(item.layout())
+            sip.delete(cur_lay)
+
+    def refresh(self):
+        self.refreshedTime = QTime.currentTime()
+        self.deleteLayout(self.mainLayout)  # remove main layout
+        self.drawWindow()  # regenerate main layout and set widget layout as main layout
 
     @QtCore.pyqtSlot(dict)
     def takeAction(self, token):
@@ -201,7 +226,14 @@ class MyApp(QWidget):
             changeSettings('lon', token['args'][1])
             saveSettings()
             self.weatherDownloader.refreshLocation()
-            self.update()
+            self.refresh()
+        
+        elif token['type'] == 'refresh':
+            self.refresh()
+
+        elif token['type'] == 'set_auto_interval':
+            changeSettings('refresh_term', token['args'][0])
+            self.refresh()
 
 
 if __name__ == '__main__':

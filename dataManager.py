@@ -40,6 +40,12 @@ applicationSettings = {}
 defaultApplicationSettings = {
     'lat': '37.56779',  # latitude of Seoul, Korea
     'lon': '126.97765',  # longitude of Seoul, Korea
+    'refresh_term': '30',  # refresh main widget after every 30 minutes
+}
+applicationSettingsType = {
+    'lat': float,
+    'lon': float,
+    'refresh_term': int,
 }
 
 with open('settings.txt', 'rt') as settingsFile:
@@ -52,7 +58,7 @@ with open('settings.txt', 'rt') as settingsFile:
         applicationSettings[name.strip()] = value.strip()
 
 def changeSettings(name, value):
-    applicationSettings[name] = value
+    applicationSettings[name] = str(value)
 
 def saveSettings():
     with open('settings.txt', 'wt') as settingsFile:
@@ -60,6 +66,10 @@ def saveSettings():
         for name, value in applicationSettings.items():
             content.append(f'{name},{value}')
         settingsFile.write('\n'.join(content))
+
+def getSettings(name):
+    tp = applicationSettingsType[name]
+    return tp(applicationSettings[name])
 
 
 # Weather data downloader
