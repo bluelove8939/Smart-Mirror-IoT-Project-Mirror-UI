@@ -70,7 +70,7 @@ class MyApp(QWidget):
         self.setWindowTitle('Smart Mirror System')
         self.setWindowIcon(QIcon('assets/title_icon.png'))
         self.setStyleSheet('background-color:black;')
-        self.setGeometry(0, 0, 1400, 1000)
+        # self.setGeometry(0, 0, 1400, 1000)
         self.updatesEnabled = True
 
         # Time widget
@@ -95,8 +95,8 @@ class MyApp(QWidget):
         self.bluetoothThread.start()
         self.bluetoothThread.threadEvent.connect(self.takeAction)
 
-        # self.showFullScreen()
-        self.show()
+        self.showFullScreen()
+        # self.show()
 
     def drawWindow(self):
         # Schedule widget
@@ -112,14 +112,20 @@ class MyApp(QWidget):
         self.mainLayout = QVBoxLayout()
         self.mainLayout.setContentsMargins(20, 20, 20, 20)
         self.mainLayout.addWidget(self.dateTimeWidget)
+        
+        self.mainLayout.addStretch(1)
+
+        centerLayout = QHBoxLayout()
+        centerLayout.addWidget(self.scheduleWidget)
+        centerLayout.addStretch(1)
+        self.mainLayout.addLayout(centerLayout)
+        
         self.mainLayout.addStretch(1)
 
         bottomLayout = QHBoxLayout()
         bottomLayout.addWidget(self.weatherWidget)
         bottomLayout.addStretch(1)
         bottomLayout.addWidget(self.calendarWidget)
-        bottomLayout.addStretch(1)
-        bottomLayout.addWidget(self.scheduleWidget)
         self.mainLayout.addLayout(bottomLayout)
 
         self.setLayout(self.mainLayout)
@@ -135,25 +141,24 @@ class MyApp(QWidget):
         
     def generateScheduleWidget(self):
         groupbox = QGroupBox()
-        groupbox.setFixedWidth(210)
-        # groupbox.setFixedHeight(250)
+        groupbox.setFixedWidth(190)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
         scheduleDataList = self.scheduleDownloader.download(QDate.currentDate().toString('yyyy-MM-dd'))
 
         titleLabel = QLabel("일정" if len(scheduleDataList) > 0 else "일정을 추가하세요")
         titleLabel.setStyleSheet(labelDefaultStyleSheet + 
-            'color: white; font-size: 13pt; font-weight: bold; border-style: none;')
+            'color: white; font-size: 11pt; font-weight: bold; border-style: none;')
 
         labels = [titleLabel]
         for schedule in scheduleDataList:
             label = QLabel(schedule[0])
             if schedule[1] == '1':
                 label.setStyleSheet(labelDefaultStyleSheet + 
-                    'color: white; font-size: 11pt; font-weight: bold; text-decoration: line-through;')
+                    'color: white; font-size: 10pt; font-weight: bold; text-decoration: line-through;')
             else:
                 label.setStyleSheet(labelDefaultStyleSheet + 
-                    'color: white; font-size: 11pt; font-weight: bold; border-style: none;')
+                    'color: white; font-size: 10pt; font-weight: bold; border-style: none;')
             labels.append(label)
 
         vbox = QVBoxLayout()
@@ -170,8 +175,8 @@ class MyApp(QWidget):
 
     def generateWeatherWidget(self):
         groupbox = QGroupBox()
-        groupbox.setFixedWidth(210)
-        groupbox.setFixedHeight(260)
+        groupbox.setFixedWidth(190)
+        groupbox.setFixedHeight(240)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
         # Download weather data
@@ -193,11 +198,11 @@ class MyApp(QWidget):
         weatherIconwidget.setPixmap(weatherIconPixmap)
 
         # Set style of generated sub widgets
-        cityNameWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 13pt; font-weight: bold; color: white;')
-        temperatureWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 13pt; font-weight: bold; color: white;')
-        humidityWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 13pt; font-weight: bold; color: white;')
-        minMaxTemperatureWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 10pt; font-weight: bold; color: white;')
-        refreshedTimeWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 10pt; font-weight: normal;  color: white;')
+        cityNameWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 10pt; font-weight: bold; color: white;')
+        temperatureWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 10pt; font-weight: bold; color: white;')
+        humidityWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 10pt; font-weight: bold; color: white;')
+        minMaxTemperatureWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 8pt; font-weight: bold; color: white;')
+        refreshedTimeWidget.setStyleSheet(labelDefaultStyleSheet + 'font-size: 8pt; font-weight: normal;  color: white;')
         weatherIconwidget.setStyleSheet('border-style: none')
 
         # Generate layouts fo subwidgets and return weather widget
@@ -215,7 +220,7 @@ class MyApp(QWidget):
 
     def generateCalenderWidget(self):
         groupbox = QGroupBox()
-        groupbox.setFixedWidth(240)
+        groupbox.setFixedWidth(190)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
         
         today = QDate.currentDate()
@@ -228,7 +233,7 @@ class MyApp(QWidget):
         
         # 1. Layout for calender header
         calenderHeaderLabel = QLabel(f'{targetYear}년 {targetMonth}월')
-        calenderHeaderLabel.setStyleSheet(labelDefaultStyleSheet + 'font-size: 13pt; font-weight: bold; color: white;')
+        calenderHeaderLabel.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: white;')
         headerLayout = QHBoxLayout()
         headerLayout.addStretch(1)
         headerLayout.addWidget(calenderHeaderLabel)
@@ -245,9 +250,9 @@ class MyApp(QWidget):
         for cidx, name in enumerate(weekdayNames):
             lbl = QLabel(name)
             if cidx == 0:
-                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: red;')
+                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 9pt; font-weight: bold; color: red;')
             else:
-                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: white;')
+                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 9pt; font-weight: bold; color: white;')
             calenderBodyGridLayout.addWidget(lbl, 0, cidx)
         
 
@@ -257,11 +262,11 @@ class MyApp(QWidget):
         for targetDay in range(1, lastDay(targetYear, targetMonth)+1):  
             lbl = QLabel(str(targetDay))
             if cidx == 0:
-                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: red;')
+                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 9pt; font-weight: bold; color: red;')
             elif QDate.currentDate() == QDate(targetYear, targetMonth, targetDay):
-                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: black; background-color: white;')
+                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 9pt; font-weight: bold; color: black; background-color: white;')
             else:
-                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 11pt; font-weight: bold; color: white;')
+                lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 9pt; font-weight: bold; color: white;')
             calenderBodyGridLayout.addWidget(lbl, ridx, cidx)
             cidx += 1
             
