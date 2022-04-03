@@ -24,11 +24,12 @@ import bluetooth  # pybluez library
 #   - openweathermap
 
 apikeys = {}
+apikeysDirectoryPath = os.path.join(os.path.curdir, 'assets', 'keys')
 
-with open(os.path.join('assets', 'keys', 'apikeys.txt'), 'rt') as keyFile:
-    content = list(map(lambda x: x.split(','), keyFile.readlines()))
-    for keyname, keycontent in content:
-        apikeys[keyname.strip()] = keycontent.strip()
+with open(os.path.join('assets', 'keys', 'apikeys.json'), 'rt') as keyFile:
+    readApiKeys = json.loads(keyFile.read())
+    for k, v in readApiKeys.items():
+        apikeys[k] = v
 
 
 # Reading settings file
@@ -38,38 +39,30 @@ with open(os.path.join('assets', 'keys', 'apikeys.txt'), 'rt') as keyFile:
 
 applicationSettings = {}
 defaultApplicationSettings = {
-    'lat': '37.56779',  # latitude of Seoul, Korea
-    'lon': '126.97765',  # longitude of Seoul, Korea
-    'refresh_term': '30',  # refresh main widget after every 30 minutes
-}
-applicationSettingsType = {
-    'lat': float,
-    'lon': float,
-    'refresh_term': int,
+    'lat': 37.56779,  # latitude of Seoul, Korea
+    'lon': 126.97765,  # longitude of Seoul, Korea
+    'refresh_term': 30,  # refresh main widget after every 30 minutes
 }
 
-with open('settings.txt', 'rt') as settingsFile:
-    content = list(map(lambda x: x.split(','), settingsFile.readlines()))
+with open('settings.json', 'rt') as settingsFile:
+    content = json.loads(settingsFile.read())
 
     for name, value in defaultApplicationSettings.items():  # copy default settings
         applicationSettings[name] = value
 
-    for name, value in content:  # read settings from settings file
-        applicationSettings[name.strip()] = value.strip()
+    for name, value in content.items():  # read settings from settings file
+        applicationSettings[name.strip()] = value
 
 def changeSettings(name, value):
-    applicationSettings[name] = str(value)
+    applicationSettings[name] = value
+    saveSettings()
 
 def saveSettings():
-    with open('settings.txt', 'wt') as settingsFile:
-        content = []
-        for name, value in applicationSettings.items():
-            content.append(f'{name},{value}')
-        settingsFile.write('\n'.join(content))
+    with open('settings.json', 'wt') as settingsFile:
+        settingsFile.write(json.dumps(applicationSettings))
 
 def getSettings(name):
-    tp = applicationSettingsType[name]
-    return tp(applicationSettings[name])
+    return applicationSettings[name]
 
 
 # Weather data downloader
@@ -274,13 +267,104 @@ def weekDay(year, month, day):
     return totalDay(year, month, day) % 7
 
 
+# Google Assistant (Custom assistant-sdk-python)
+#
+# Note:
+#   To enable google assistant, you need separaed file named 'google_assistant_config.json'
+#   Add the code below:
+#       {
+#           "google-assistant-enabled": true
+#       }
+#   Before adding the file, check if you followed all of the instructions below
+#
+#   Prior to enable the google assistant, run "googlesample-assistant-pushtotalk" to make
+#   sure that you already installed google assistant sdk to your environment and generated 
+#   your google OAuth2 credential file inside the appdir
+#   If there's a problem, see the website below and follow the instruction
+#     => https://developers.google.com/assistant/sdk/guides/service/python/
+# 
+#   There can be deprecated method inside google assistant sdk
+#   For example, 'array.array.tostring()' is deprecated in python3.9 (audio_helpers.py)
+#   So you need to use another method 'array.array.tobytes()' to avoid the error
+# 
+#   The pushtotalk.py needs to be modified to use the code block below
+#   Modified pushtotalk.py is provided within this project
+#   Note that this modified pushtotalk.py is licenced by Google and cannot be used in
+#   commercial purpose.
+
+google_assistant_enabled = False
+
+try:
+    with open('google_assistant_config.json', 'rt') as config:
+        content = json.loads(config.read())
+        google_assistant_enabled = content['google-assistant-enabled']
+except:
+    print('google_assistant_config.json not found')
+
+google_assistant_activate = lambda message_listner, once: None
+
+if google_assistant_enabled:
+    import pushtotalk_modified as pushtotalk
+    google_assistant_activate = pushtotalk.main
+
+    # Get authentication via browser if there's no credential file
+    credpath = os.path.join(os.path.expanduser('~'), '.config', 'google-oauthlib-tool')
+    clientSecretPath = os.path.join(apikeysDirectoryPath, apikeys['googleassistantclientfilename'])
+    if 'credentials.json' not in os.listdir(credpath):
+        os.system(f"google-oauthlib-tool --scope https://www.googleapis.com/auth/assistant-sdk-prototype --save --headless --client-secrets {clientSecretPath}")
+
+class AssistantListener(object):
+        def __init__(self) -> None:
+            self.msg = None
+            self.token = None
+            self.observers = []
+        
+        def edit(self, message, token=None):
+            if self.msg is None or self.msg != message or (token is not None and self.token != token):
+                self.msg = message
+                self.token = token
+                for callback in self.observers:
+                    callback(self.msg, self.token)
+        
+        def initialize(self):
+            self.msg = None
+            self.token = None
+            self.observers = []
+        
+        def bind(self, callback):
+            self.observers.append(callback)
+
+class AssistantManager:
+    def __init__(self) -> None:
+        self.assistantListener = AssistantListener()
+
+    def activate(self, callback):
+        if google_assistant_enabled:
+            self.assistantListener.initialize()
+            pushtotalk.message_listener = self.assistantListener
+            self.assistantListener.bind(callback)
+            google_assistant_activate()
 
 
-if __name__ == '__main__':
-    bluetoothController = BluetoothController()
-    while True:
-        bluetoothController.connect()
-        while True:
-            token = bluetoothController.receive()  # Receive
-            if token is None:
-                break
+
+# # Testbench code for bluetooth connection (RFCOMM)
+#
+# if __name__ == '__main__':
+#     bluetoothController = BluetoothController()
+#     while True:
+#         bluetoothController.connect()
+#         while True:
+#             token = bluetoothController.receive()  # Receive
+#             if token is None:
+#                 break
+
+
+# # Testbench code for google assistant (custom assistant-sdk-python)
+# if __name__ == '__main__':
+#     manager = AssistantManager()
+    
+#     def testCallbackFunc(msg, token):
+#         print(f'===== {msg}')
+#         print(f'===== {token}')
+    
+#     manager.activate(testCallbackFunc)

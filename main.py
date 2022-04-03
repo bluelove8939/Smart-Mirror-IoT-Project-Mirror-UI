@@ -14,7 +14,7 @@ from PyQt5.QtCore import QThread
 
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
-from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController
+from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager
 from dataManager import changeSettings, saveSettings, getSettings, weekDay, lastDay
 
 
@@ -22,6 +22,34 @@ from dataManager import changeSettings, saveSettings, getSettings, weekDay, last
 
 widgetDefaultStyleSheet = 'background-color: black; border-style: solid; border-color: white; border-width: 0.5px; border-radius: 10px;'
 labelDefaultStyleSheet = 'border-style: none;'
+
+
+# Google Assistant thread
+# 
+# Note:
+#   Google assistant managing thread
+
+class AssistantThread(QThread):
+    threadEvent = QtCore.pyqtSignal(dict)
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.manager = AssistantManager()
+    
+    def run(self):
+        self.manager.activate(self.acceptToken)
+    
+    def acceptToken(self, msg, token):
+        if token is None:
+            self.threadEvent.emit({
+                'type': 'assistant_msg',
+                'args': [msg if msg is not None else '음성을 입력하세요'],
+            })
+        else:
+            self.threadEvent.emit({
+                'type': token.name,
+                'args': token.args,
+            })
 
 
 # Bluetooth thread
@@ -83,24 +111,36 @@ class MyApp(QWidget):
         timer.timeout.connect(self.showTime)  # refresh label widget when timeout called
         timer.start(1000)                     # run timer widget
 
-        # Generate main window layout
-        self.scheduleWidget = None  # schedule widget
-        self.weatherWidget = None   # weather widget
-        self.calendarWidget = None  # calendar widget
-        self.mainLayout = None
-        self.drawWindow()  # generate main layout and set widget layout as main layout
-
         # Run bluetooth thread
         self.bluetoothThread = BluetoothThread()
         self.bluetoothThread.start()
         self.bluetoothThread.threadEvent.connect(self.takeAction)
 
-        self.showFullScreen()
-        # self.show()
+        # [TEST] Run assistant thread
+        self.assistantThread = AssistantThread()
+        self.assistantThread.start()
+        self.assistantThread.threadEvent.connect(self.takeAction)
+        self.assistantMsgLabel = QLabel('Google Assistant')
+        self.assistantMsgLabel.setStyleSheet(labelDefaultStyleSheet + 
+            'color: white; font-size: 11pt; font-weight: bold; border-style: none;')
+
+        # Generate main window layout and show that in full screen
+        self.scheduleWidget = None   # schedule widget
+        self.assistantWidget = None  # assistant widget
+        self.weatherWidget = None    # weather widget
+        self.calendarWidget = None   # calendar widget
+        self.mainLayout = None
+        self.drawWindow()  # generate main layout and set widget layout as main layout
+
+        # self.showFullScreen()
+        self.show()
 
     def drawWindow(self):
         # Schedule widget
         self.scheduleWidget = self.generateScheduleWidget()
+
+        # Assistant widget
+        self.assistantWidget = self.generateAssistantWidget()
 
         # Weather widget
         self.weatherWidget = self.generateWeatherWidget()
@@ -118,6 +158,7 @@ class MyApp(QWidget):
         centerLayout = QHBoxLayout()
         centerLayout.addWidget(self.scheduleWidget)
         centerLayout.addStretch(1)
+        centerLayout.addWidget(self.assistantWidget)
         self.mainLayout.addLayout(centerLayout)
         
         self.mainLayout.addStretch(1)
@@ -138,6 +179,26 @@ class MyApp(QWidget):
         refreshTerm = getSettings('refresh_term')
         if (self.refreshedTime.secsTo(QTime.currentTime()) // 60) >= refreshTerm:
             self.refresh()
+
+    def generateAssistantWidget(self):
+        groupbox = QGroupBox()
+        groupbox.setFixedWidth(190)
+        groupbox.setStyleSheet(widgetDefaultStyleSheet)
+
+        vbox = QVBoxLayout()
+        vbox.addStretch(1)
+
+        hbox = QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(self.assistantMsgLabel)
+        hbox.addStretch(1)
+
+        
+        vbox.addLayout(hbox)
+        vbox.addStretch(1)
+        groupbox.setLayout(vbox)
+
+        return groupbox
         
     def generateScheduleWidget(self):
         groupbox = QGroupBox()
@@ -317,6 +378,9 @@ class MyApp(QWidget):
         elif token['type'] == 'set_auto_interval':
             changeSettings('refresh_term', token['args'][0])
             self.refresh()
+        
+        elif token['type'] == 'assistant_msg':
+            self.assistantMsgLabel.setText(token['args'][0])
 
 
 if __name__ == '__main__':
