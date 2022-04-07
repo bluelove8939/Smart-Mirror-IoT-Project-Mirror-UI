@@ -270,7 +270,7 @@ def weekDay(year, month, day):
 # Google Assistant (Custom assistant-sdk-python)
 #
 # Note:
-#   To enable google assistant, you need separaed file named 'google_assistant_config.json'
+#   To enable google assistant, you need separaed file named 'config.json'
 #   Add the code below:
 #       {
 #           "google-assistant-enabled": true
@@ -278,7 +278,7 @@ def weekDay(year, month, day):
 #   Before adding the file, check if you followed all of the instructions below
 #
 #   Prior to enable the google assistant, run "googlesample-assistant-pushtotalk" to make
-#   sure that you already installed google assistant sdk to your environment and generated 
+#   sure that you already installed google assistant sdk to your environment and generated
 #   your google OAuth2 credential file inside the appdir
 #   If there's a problem, see the website below and follow the instruction
 #     => https://developers.google.com/assistant/sdk/guides/service/python/
@@ -286,7 +286,7 @@ def weekDay(year, month, day):
 #   There can be deprecated method inside google assistant sdk
 #   For example, 'array.array.tostring()' is deprecated in python3.9 (audio_helpers.py)
 #   So you need to use another method 'array.array.tobytes()' to avoid the error
-# 
+#
 #   The pushtotalk.py needs to be modified to use the code block below
 #   Modified pushtotalk.py is provided within this project
 #   Note that this modified pushtotalk.py is licenced by Google and cannot be used in
@@ -295,11 +295,11 @@ def weekDay(year, month, day):
 google_assistant_enabled = False
 
 try:
-    with open('google_assistant_config.json', 'rt') as config:
+    with open('config.json', 'rt') as config:
         content = json.loads(config.read())
         google_assistant_enabled = content['google-assistant-enabled']
 except:
-    print('google_assistant_config.json not found')
+    print('config.json not found')
 
 google_assistant_activate = lambda message_listner, once: None
 
