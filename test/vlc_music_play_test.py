@@ -7,9 +7,9 @@ import vlc
 os.add_dll_directory(os.getcwd())
 
 apikeys = {}
-apikeysDirectoryPath = os.path.join(os.path.curdir, 'assets', 'keys')
+apikeysDirectoryPath = os.path.join(os.path.curdir, '../assets', 'keys')
 
-with open(os.path.join('assets', 'keys', 'apikeys.json'), 'rt') as keyFile:
+with open(os.path.join('../assets', 'keys', 'apikeys.json'), 'rt') as keyFile:
     readApiKeys = json.loads(keyFile.read())
     for k, v in readApiKeys.items():
         apikeys[k] = v
@@ -26,7 +26,7 @@ if "youtubeapikey" in apikeys.keys():
 
 url = "https://www.youtube.com/watch?v=L6HRp9GUTT0"
 video = pafy.new(url)
-best = video.getbest()
+best = video.getbestaudio()
 playurl = best.url
 
 Instance = vlc.Instance()
