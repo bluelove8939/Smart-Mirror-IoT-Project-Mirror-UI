@@ -8,7 +8,7 @@ First, make a clone of this project by using command below
 
     $ git clone https://github.com/bluelove8939/Smart-Mirror-IoT-Project-Mirror-UI.git
 
-And run setup bash codes inside the project. This code installs all dependencies required.
+And run setup bash codes inside the project. This code installs all the dependencies required.
 
     $ cd Smart-Mirror-IoT-Project-Mirror-UI
     $ bash raspberrypi-setup.sh
@@ -55,7 +55,7 @@ Make sure you already have your microphone and speaker attatched to raspberry pi
 
 Prior to enable the Google Assistant, run "googlesample-assistant-pushtotalk" to make sure that you already installed 
 Google Assistant SDK to your environment and generated your google OAuth2 credential file inside the appdir.
-If there's a problem, see the website below and follow the instruction.
+If there's any problem, see the website below and follow the instruction.
 
     https://developers.google.com/assistant/sdk/guides/service/python/
 
