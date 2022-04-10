@@ -87,6 +87,7 @@ And run the code below.
 
 There can be deprecated method inside python vlc and pafy library.
 For example, 'dislike_count' is no longer used in YouTube system.
+So you need comment the line 54 of 'backend_youtube_dl.py' inside pafy library.
 Run 'test/vlc_music_play_test.py' to check if there's no problem for running this project.
 
     $ python ./test/vlc_music_play_test.py
