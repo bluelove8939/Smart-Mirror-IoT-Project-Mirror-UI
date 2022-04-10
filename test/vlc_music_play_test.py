@@ -4,12 +4,12 @@ import pafy
 import vlc
 
 
-os.add_dll_directory(os.getcwd())
+# os.add_dll_directory(os.getcwd())
 
 apikeys = {}
-apikeysDirectoryPath = os.path.join(os.path.curdir, '../assets', 'keys')
+apikeysDirectoryPath = os.path.join(os.path.dirname(__file__), '..', 'assets', 'keys')
 
-with open(os.path.join('../assets', 'keys', 'apikeys.json'), 'rt') as keyFile:
+with open(os.path.join(os.path.dirname(__file__), '..', 'assets', 'keys', 'apikeys.json'), 'rt') as keyFile:
     readApiKeys = json.loads(keyFile.read())
     for k, v in readApiKeys.items():
         apikeys[k] = v

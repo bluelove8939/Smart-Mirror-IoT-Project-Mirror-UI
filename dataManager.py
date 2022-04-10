@@ -2,6 +2,8 @@ import io
 import os
 import requests
 import json
+import pafy
+import vlc
 import os.path
 
 from google.auth.transport.requests import Request
@@ -30,6 +32,26 @@ with open(os.path.join('assets', 'keys', 'apikeys.json'), 'rt') as keyFile:
     readApiKeys = json.loads(keyFile.read())
     for k, v in readApiKeys.items():
         apikeys[k] = v
+
+
+# Reading device configuration
+#
+# Note:
+#   config.json file is required to enable some traits of the device
+
+configurations = {
+    "google-drive-enabled": False,
+    "google-assistant-enabled": False,
+    "youtube-music-enabled": False,
+}
+
+try:
+    with open('config.json', 'rt') as config:
+        content = json.loads(config.read())
+        for k, v in content.items():
+            configurations[k] = v
+except:
+    print('config.json not found')
 
 
 # Reading settings file
@@ -63,6 +85,39 @@ def saveSettings():
 
 def getSettings(name):
     return applicationSettings[name]
+
+
+# Google login
+#
+# Note:
+#   Login to google and generate user token for accessing private information
+
+google_scope = []
+if configurations['google-drive-enabled']:
+    google_scope.append('https://www.googleapis.com/auth/drive.readonly')
+if configurations['youtube-music-enabled']:
+    google_scope.append('https://www.googleapis.com/auth/youtube.readonly')
+
+if len(google_scope) != 0:
+    googleclientIDfilename = apikeys['googleclientfilename']
+
+    if 'user_account_tokens' not in os.listdir('assets'):
+        os.mkdir(os.path.join('assets', 'user_account_tokens'))  # generate user_account_tokens directory
+
+    # Generate login token via web browser
+    tokenpath = os.path.join('assets', 'user_account_tokens', 'token.json')
+    creds = None
+    if os.path.exists(tokenpath):
+        creds = Credentials.from_authorized_user_file(tokenpath, google_scope)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(f'assets/keys/{googleclientIDfilename}', google_scope)
+            creds = flow.run_local_server()
+        print(creds.to_json())
+        with open(tokenpath, 'w') as token:
+            token.write(creds.to_json())
 
 
 # Weather data downloader
@@ -114,31 +169,12 @@ driveTextFileType = 'text/plain'
 
 class ScheduleDownloader:
     def __init__(self):
-        self.drivescope = ['https://www.googleapis.com/auth/drive.readonly']
-        self.googleclientIDfilename = apikeys['googleclientfilename']
+        global creds
+        self.creds = creds
 
     def download(self, targetDate):
-        # Generate user_account_tokens directory
-        if 'user_account_tokens' not in os.listdir('assets'):
-            os.mkdir(os.path.join('assets', 'user_account_tokens'))
-
-        # Generate login token via web browser
-        tokenpath = os.path.join('assets', 'user_account_tokens', 'token.json')
-        creds = None
-        if os.path.exists(tokenpath):
-            creds = Credentials.from_authorized_user_file(tokenpath, self.drivescope)
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(f'assets/keys/{self.googleclientIDfilename}', self.drivescope)
-                creds = flow.run_local_server(port=0)
-            print(creds.to_json())
-            with open(tokenpath, 'w') as token:
-                token.write(creds.to_json())
-
         try:
-            service = build('drive', 'v3', credentials=creds)
+            service = build('drive', 'v3', credentials=self.creds)
 
             # Find out application root folder ID
             results = service.files().list(
@@ -292,18 +328,9 @@ def weekDay(year, month, day):
 #   Note that this modified pushtotalk.py is licenced by Google and cannot be used in
 #   commercial purpose.
 
-google_assistant_enabled = False
+google_assistant_activate = lambda message_listner: None
 
-try:
-    with open('config.json', 'rt') as config:
-        content = json.loads(config.read())
-        google_assistant_enabled = content['google-assistant-enabled']
-except:
-    print('config.json not found')
-
-google_assistant_activate = lambda message_listner, once: None
-
-if google_assistant_enabled:
+if configurations['google-assistant-enabled']:
     import pushtotalk_modified as pushtotalk
     google_assistant_activate = pushtotalk.main
 
@@ -339,12 +366,22 @@ class AssistantManager:
         self.assistantListener = AssistantListener()
 
     def activate(self, callback):
-        if google_assistant_enabled:
+        if configurations['google-assistant-enabled']:
             self.assistantListener.initialize()
             pushtotalk.message_listener = self.assistantListener
             self.assistantListener.bind(callback)
             google_assistant_activate()
 
+
+# YouTube music manager
+#
+# Note:
+#   Plays a music from youtube metadata and vlc player
+
+class YouTubeMusicManager:
+    def __init__(self) -> None:
+        global creds
+        self.creds = creds
 
 
 # # Testbench code for bluetooth connection (RFCOMM)

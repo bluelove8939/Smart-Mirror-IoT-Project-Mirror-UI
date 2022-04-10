@@ -1,3 +1,5 @@
 {
-    "google-assistant-enabled": false
+    "google-drive-enabled": true,
+    "google-assistant-enabled": true,
+    "youtube-music-enabled": true
 }
