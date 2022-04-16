@@ -14,7 +14,7 @@ from PyQt5.QtCore import QThread
 
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
-from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager
+from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager
 from dataManager import changeSettings, saveSettings, getSettings, weekDay, lastDay
 
 
@@ -93,6 +93,7 @@ class MyApp(QWidget):
         self.refreshedTime = QTime.currentTime()
         self.weatherDownloader = WeatherDownloader()
         self.scheduleDownloader = ScheduleDownloader()
+        self.musicManager = YouTubeMusicManager()
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
@@ -158,7 +159,6 @@ class MyApp(QWidget):
         centerLayout = QHBoxLayout()
         centerLayout.addWidget(self.scheduleWidget)
         centerLayout.addStretch(1)
-        centerLayout.addWidget(self.assistantWidget)
         self.mainLayout.addLayout(centerLayout)
         
         self.mainLayout.addStretch(1)
@@ -168,6 +168,12 @@ class MyApp(QWidget):
         bottomLayout.addStretch(1)
         bottomLayout.addWidget(self.calendarWidget)
         self.mainLayout.addLayout(bottomLayout)
+
+        assistantLayout = QHBoxLayout()
+        assistantLayout.addStretch(1)
+        assistantLayout.addWidget(self.assistantWidget)
+        assistantLayout.addStretch(1)
+        self.mainLayout.addLayout(assistantLayout)
 
         self.setLayout(self.mainLayout)
 
@@ -180,9 +186,18 @@ class MyApp(QWidget):
         if (self.refreshedTime.secsTo(QTime.currentTime()) // 60) >= refreshTerm:
             self.refresh()
 
-    def generateAssistantWidget(self):
+    def generateMusicPlayerWiget(self):
         groupbox = QGroupBox()
         groupbox.setFixedWidth(190)
+        groupbox.setStyleSheet(widgetDefaultStyleSheet)
+
+        
+
+        return groupbox
+
+    def generateAssistantWidget(self):
+        groupbox = QGroupBox()
+        groupbox.setFixedWidth(440)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
         vbox = QVBoxLayout()
@@ -192,7 +207,6 @@ class MyApp(QWidget):
         hbox.addStretch(1)
         hbox.addWidget(self.assistantMsgLabel)
         hbox.addStretch(1)
-
         
         vbox.addLayout(hbox)
         vbox.addStretch(1)
@@ -345,7 +359,6 @@ class MyApp(QWidget):
         groupbox.setLayout(vbox)
 
         return groupbox
-
 
     def deleteLayout(self, cur_lay):
         if cur_lay is not None:

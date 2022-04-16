@@ -1,3 +1,4 @@
+from distutils.log import error
 import io
 import os
 import requests
@@ -339,6 +340,9 @@ if configurations['google-assistant-enabled']:
     clientSecretPath = os.path.join(apikeysDirectoryPath, apikeys['googleassistantclientfilename'])
     if 'credentials.json' not in os.listdir(credpath):
         os.system(f"google-oauthlib-tool --scope https://www.googleapis.com/auth/assistant-sdk-prototype --save --headless --client-secrets {clientSecretPath}")
+    # assistantCredsFile = os.path.join(credpath, 'credentials.json')
+    # with open(assistantCredsFile, 'r') as credsfile:
+    #     credentials = Credentials(token=None, **json.load(credsfile))
 
 class AssistantListener(object):
         def __init__(self) -> None:
@@ -378,10 +382,140 @@ class AssistantManager:
 # Note:
 #   Plays a music from youtube metadata and vlc player
 
+cachesDirectoryPath = os.path.join(os.path.curdir, 'caches')
+
+if "youtubeapikey" in apikeys.keys():
+    pafy.set_api_key(apikeys["youtubeapikey"])
+
+def readYouTubeCaches():
+    with open(os.path.join(cachesDirectoryPath, 'youtube_cache.json'), 'r') as cache:
+        cached_data = json.loads(cache.read())
+    return cached_data
+
+def writeYouTubeCaches(playlist, query):
+    with open(os.path.join(cachesDirectoryPath, 'youtube_cache.json'), 'wt') as cache:
+        cache.write(json.dumps({
+            'playlist': playlist,
+            'query': query,
+        }))
+
 class YouTubeMusicManager:
     def __init__(self) -> None:
         global creds
         self.creds = creds
+        self.nextPageToken = None
+        self.instance = vlc.Instance()
+        self.player = self.instance.media_player_new()
+
+        self._ready = False
+        self.current_playlist = None
+        self.current_index = None
+        self.current_query = None
+
+        try:
+            cached_data = readYouTubeCaches()
+            self.current_playlist = cached_data['playlist']
+            self.current_index = 0
+            self.current_query = cached_data['query']
+            self._ready = True
+        except:
+            print('Cannot find youtube caches')
+    
+    def search(self, query=None, cnt=5, nextpage=False):
+        try:
+            # Use current query if query is None
+            if query is None and self.current_query is not None:
+                query = self.current_query
+            elif query is None and self.current_query is None:
+                raise Exception('YouTube music manager error: query required')
+
+            service = build('youtube', 'v3', credentials=self.creds)
+
+            # Send request
+            if nextpage and self.nextPageToken is not None:
+                # Search by using the given keyword
+                search_result = service.search().list(
+                    q=query, part='snippet', maxResults=cnt, regionCode='KR',
+                    type='video', videoCategoryId='10', pageToken=self.nextPageToken
+                    ).execute()
+            else:
+                # Search by using the given keyword
+                search_result = service.search().list(
+                    q=query, part='snippet', maxResults=cnt, regionCode='KR',
+                    type='video', videoCategoryId='10'
+                    ).execute()
+
+            self.nextPageToken = search_result['nextPageToken']
+
+            if nextpage == False:
+                self.current_playlist = search_result['items']
+                self.current_query = query
+                self.current_index = 0
+            elif len(search_result) > 0:
+                self.current_playlist += search_result['items']
+            else:
+                self.current_index = 0
+            
+            writeYouTubeCaches(self.current_playlist, self.current_query)
+
+        except:
+            print(f'An error occurred')
+    
+    def setPlayer(self, videoId):
+        self._ready = False
+
+        video_url = f"https://www.youtube.com/watch?v={videoId}"
+        video = pafy.new(video_url)
+        best = video.getbestaudio()
+        playurl = best.url
+
+        media = self.instance.media_new(playurl)
+        media.get_mrl()
+        self.player.set_media(media)
+
+        self._ready = True
+    
+    def moveNext(self):
+        if self.player.get_state() != vlc.State.Paused:
+            self.player.pause()
+
+        self.current_index += 1
+        if self.current_index >= len(self.current_playlist):
+                self.search(nextpage=True)
+        try:
+            self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
+        except:
+            self.moveNext()
+
+    def movePrev(self):
+        if self.player.get_state() != vlc.State.Paused:
+            self.player.pause()
+            
+        self.current_index -= 1
+        if self.current_index < 0:
+            self.current_index = len(self.current_playlist) - 1
+        try:
+            self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
+        except:
+            self.movePrev()
+
+    def play(self):
+        print(f'Playing index {self.current_index} within {len(self.current_playlist)}')
+        print(f'title: {self.current_playlist[self.current_index]["snippet"]["title"]}')
+        try:
+            if not self._ready:
+                if self.current_playlist is not None and self.current_query is not None:
+                    if self.current_index is None:
+                        self.current_index = 0
+                    self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
+            self.player.play()
+        except:
+            print('Skipped because an error occurred')
+            self.moveNext()
+            self.play()
+
+    def pause(self):
+        self.player.pause()
 
 
 # # Testbench code for bluetooth connection (RFCOMM)
@@ -405,3 +539,25 @@ class YouTubeMusicManager:
 #         print(f'===== {token}')
     
 #     manager.activate(testCallbackFunc)
+
+
+# Testbench code for youtube music manager
+if __name__ == '__main__':
+    import time
+
+    manager = YouTubeMusicManager()
+    res = manager.search('zior park')
+    manager.play()
+
+    while True:
+        c = input('Enter command: ')
+        if c == 'play':
+            manager.play()
+        if c == 'pause':
+            manager.pause()
+        if c == 'next':
+            manager.moveNext()
+            manager.play()
+        if c == 'prev':
+            manager.movePrev()
+            manager.play()

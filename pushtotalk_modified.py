@@ -75,8 +75,12 @@ def remove_vacancy_from_string(targetString):
     return ''.join(processedString)
 
 predefined_tokens = {
-    '화면을업데이트해줘': ActionToken(name='refresh', args=[]),
+    '화면새로고침해줘': ActionToken(name='refresh', args=[]),
 }
+
+def get_predefined_token(targetString):
+    targetString = remove_vacancy_from_string(targetString)
+    
 # END 
 
 
