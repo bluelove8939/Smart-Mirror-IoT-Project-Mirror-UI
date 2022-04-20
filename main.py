@@ -3,7 +3,7 @@ import sys
 
 from PyQt5 import sip
 from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5.QtWidgets import QLabel, QGroupBox
+from PyQt5.QtWidgets import QLabel, QGroupBox, QPushButton
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout  # Layouts
 
 from PyQt5 import QtCore
@@ -14,6 +14,7 @@ from PyQt5.QtCore import QThread
 
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
+from dataManager import vlc
 from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager
 from dataManager import changeSettings, saveSettings, getSettings, weekDay, lastDay
 
@@ -23,6 +24,12 @@ from dataManager import changeSettings, saveSettings, getSettings, weekDay, last
 widgetDefaultStyleSheet = 'background-color: black; border-style: solid; border-color: white; border-width: 0.5px; border-radius: 10px;'
 labelDefaultStyleSheet = 'border-style: none;'
 
+# Image urls
+button_play = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'play.PNG')
+button_pause = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'pause.PNG')
+button_next = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'next.PNG')
+button_prev = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'prev.PNG')
+button_opening = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'opening.PNG')
 
 # Google Assistant thread
 # 
@@ -80,6 +87,90 @@ class BluetoothThread(QThread):
         return token
 
 
+# Music Player Module
+#
+# Note:
+#   Youtube music player module including manager and widget
+
+class MusicPlayerModule(object):
+    def __init__(self, parent=None) -> None:
+        self.parent = parent
+        self.manager = YouTubeMusicManager()
+
+        self.widget = None
+        self.manager.bindCallback(self.refresh)
+        self.title_widget = None
+        self.play_button_widget = None
+
+        self.drawWindow()
+
+    def drawWindow(self):
+        self.widget = QGroupBox()
+        
+        self.layout = QVBoxLayout()
+        self.layout.addStretch(1)
+        
+        music_title = 'Music player'
+        if self.manager.current_playlist is not None and self.manager.current_index is not None:
+            music_title = self.manager.current_playlist[self.manager.current_index]['snippet']['title']
+        
+        self.title_widget = QLabel(music_title)
+        self.title_widget.setStyleSheet(labelDefaultStyleSheet + 
+            'color: white; font-size: 11pt; font-weight: bold; border-style: none;')
+        title_layout = QHBoxLayout()
+        title_layout.addStretch(1)
+        title_layout.addWidget(self.title_widget)
+        title_layout.addStretch(1)
+        self.layout.addLayout(title_layout)
+        self.layout.addStretch(1)
+
+        self.play_button_widget = QPushButton()
+        self.play_button_widget.setStyleSheet(f'border-style: none')
+        if self.manager.isPlaying():
+            self.play_button_widget.clicked.connect(self.manager.pause)
+            self.play_button_widget.setIcon(QIcon(button_pause))
+        else:
+            self.play_button_widget.clicked.connect(self.manager.play)
+            self.play_button_widget.setIcon(QIcon(button_play))
+        self.play_button_widget.setIconSize(QtCore.QSize(50, 50))
+
+        next_button_widget = QPushButton()
+        next_button_widget.setStyleSheet(f'border-style: none')
+        next_button_widget.clicked.connect(self.manager.moveNext)
+        next_button_widget.setIcon(QIcon(button_next))
+        next_button_widget.setIconSize(QtCore.QSize(50, 50))
+
+        prev_button_widget = QPushButton()
+        prev_button_widget.setStyleSheet(f'border-style: none')
+        prev_button_widget.clicked.connect(self.manager.movePrev)
+        prev_button_widget.setIcon(QIcon(button_prev))
+        prev_button_widget.setIconSize(QtCore.QSize(50, 50))
+
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(prev_button_widget)
+        button_layout.addStretch(1)
+        button_layout.addWidget(self.play_button_widget)
+        button_layout.addStretch(1)
+        button_layout.addWidget(next_button_widget)
+        self.layout.addLayout(button_layout)
+        self.layout.addStretch(1)
+
+        self.widget.setLayout(self.layout)
+
+    def refresh(self):
+        music_title = 'Music player'
+        if self.manager.current_playlist is not None and self.manager.current_index is not None:
+            music_title = self.manager.current_playlist[self.manager.current_index]['snippet']['title']
+        self.title_widget.setText(music_title)
+
+        if self.manager.isPlaying():
+            self.play_button_widget.clicked.connect(self.manager.pause)
+            self.play_button_widget.setIcon(QIcon(button_pause))
+        else:
+            self.play_button_widget.clicked.connect(self.manager.play)
+            self.play_button_widget.setIcon(QIcon(button_play))
+
+
 # Main user interface
 #
 # Note:
@@ -93,7 +184,7 @@ class MyApp(QWidget):
         self.refreshedTime = QTime.currentTime()
         self.weatherDownloader = WeatherDownloader()
         self.scheduleDownloader = ScheduleDownloader()
-        self.musicManager = YouTubeMusicManager()
+        self.musicPlayerModule = MusicPlayerModule()
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
@@ -130,6 +221,7 @@ class MyApp(QWidget):
         self.assistantWidget = None  # assistant widget
         self.weatherWidget = None    # weather widget
         self.calendarWidget = None   # calendar widget
+        self.playerWidget = None     # youtube music player widget
         self.mainLayout = None
         self.drawWindow()  # generate main layout and set widget layout as main layout
 
@@ -137,17 +229,13 @@ class MyApp(QWidget):
         self.show()
 
     def drawWindow(self):
-        # Schedule widget
+        # Required widget
         self.scheduleWidget = self.generateScheduleWidget()
-
-        # Assistant widget
         self.assistantWidget = self.generateAssistantWidget()
-
-        # Weather widget
         self.weatherWidget = self.generateWeatherWidget()
-
-        # Calendar widget
         self.calendarWidget = self.generateCalenderWidget()
+        self.playerWidget = self.generateMusicPlayerWidget()
+        print(f'inside: {id(self.playerWidget)}')
 
         # Generating layout
         self.mainLayout = QVBoxLayout()
@@ -159,6 +247,7 @@ class MyApp(QWidget):
         centerLayout = QHBoxLayout()
         centerLayout.addWidget(self.scheduleWidget)
         centerLayout.addStretch(1)
+        centerLayout.addWidget(self.playerWidget)
         self.mainLayout.addLayout(centerLayout)
         
         self.mainLayout.addStretch(1)
@@ -186,12 +275,10 @@ class MyApp(QWidget):
         if (self.refreshedTime.secsTo(QTime.currentTime()) // 60) >= refreshTerm:
             self.refresh()
 
-    def generateMusicPlayerWiget(self):
-        groupbox = QGroupBox()
+    def generateMusicPlayerWidget(self):
+        groupbox = self.musicPlayerModule.widget
         groupbox.setFixedWidth(190)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
-
-        
 
         return groupbox
 

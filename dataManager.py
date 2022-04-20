@@ -14,7 +14,9 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
 
-import bluetooth  # pybluez library
+import bluetooth
+
+from pushtotalk_modified import PLAYING  # pybluez library
 
 
 # Reading required apikeys
@@ -400,12 +402,17 @@ def writeYouTubeCaches(playlist, query):
         }))
 
 class YouTubeMusicManager:
+    STOPPED = 0
+    PLAYING = 1
+
     def __init__(self) -> None:
         global creds
         self.creds = creds
         self.nextPageToken = None
         self.instance = vlc.Instance()
         self.player = self.instance.media_player_new()
+        self.events = self.player.event_manager()
+        self.state = YouTubeMusicManager.STOPPED
 
         self._ready = False
         self.current_playlist = None
@@ -417,9 +424,12 @@ class YouTubeMusicManager:
             self.current_playlist = cached_data['playlist']
             self.current_index = 0
             self.current_query = cached_data['query']
+            self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
             self._ready = True
         except:
             print('Cannot find youtube caches')
+
+        self.binded = []
     
     def search(self, query=None, cnt=5, nextpage=False):
         try:
@@ -476,6 +486,7 @@ class YouTubeMusicManager:
         self._ready = True
     
     def moveNext(self):
+        self.state = YouTubeMusicManager.PLAYING
         if self.player.get_state() != vlc.State.Paused:
             self.player.pause()
 
@@ -484,10 +495,14 @@ class YouTubeMusicManager:
                 self.search(nextpage=True)
         try:
             self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
+            self.player.play()
+            self.executeCallbacks()
         except:
             self.moveNext()
+        
 
     def movePrev(self):
+        self.state = YouTubeMusicManager.PLAYING
         if self.player.get_state() != vlc.State.Paused:
             self.player.pause()
             
@@ -496,12 +511,13 @@ class YouTubeMusicManager:
             self.current_index = len(self.current_playlist) - 1
         try:
             self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
+            self.player.play()
+            self.executeCallbacks()
         except:
             self.movePrev()
 
     def play(self):
-        print(f'Playing index {self.current_index} within {len(self.current_playlist)}')
-        print(f'title: {self.current_playlist[self.current_index]["snippet"]["title"]}')
+        self.state = YouTubeMusicManager.PLAYING
         try:
             if not self._ready:
                 if self.current_playlist is not None and self.current_query is not None:
@@ -509,13 +525,33 @@ class YouTubeMusicManager:
                         self.current_index = 0
                     self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
             self.player.play()
+            self.executeCallbacks()
         except:
             print('Skipped because an error occurred')
             self.moveNext()
             self.play()
 
     def pause(self):
-        self.player.pause()
+        self.state = YouTubeMusicManager.STOPPED
+        if not self.isPaused():
+            self.player.pause()
+            self.executeCallbacks()
+
+    def bindCallback(self, method):
+        self.binded.append(method)
+    
+    def executeCallbacks(self):
+        for method in self.binded:
+            method()
+        
+    def isStopped(self):
+        return self.state == YouTubeMusicManager.STOPPED
+
+    def isPlaying(self):
+        return self.state == YouTubeMusicManager.PLAYING
+    
+    def isPaused(self):
+        return self.player.get_state() == vlc.State.Paused
 
 
 # # Testbench code for bluetooth connection (RFCOMM)
