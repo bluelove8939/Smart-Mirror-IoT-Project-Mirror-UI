@@ -347,29 +347,44 @@ if configurations['google-assistant-enabled']:
     #     credentials = Credentials(token=None, **json.load(credsfile))
 
 class AssistantListener(object):
-        def __init__(self) -> None:
-            self.msg = None
-            self.token = None
-            self.observers = []
-        
-        def edit(self, message, token=None):
-            if self.msg is None or self.msg != message or (token is not None and self.token != token):
-                self.msg = message
-                self.token = token
-                for callback in self.observers:
-                    callback(self.msg, self.token)
-        
-        def initialize(self):
-            self.msg = None
-            self.token = None
-            self.observers = []
-        
-        def bind(self, callback):
-            self.observers.append(callback)
+    def __init__(self) -> None:
+        self.msg = None
+        self.token = None
+        self.observers = []
+    
+    def edit(self, message, token=None):
+        if self.msg is None or self.msg != message or (token is not None and self.token != token):
+            self.msg = message
+            self.token = token
+            for callback in self.observers:
+                callback(self.msg, self.token)
+    
+    def initialize(self):
+        self.msg = None
+        self.token = None
+        self.observers = []
+    
+    def bind(self, callback):
+        self.observers.append(callback)
+
+class AssistantTrigger:
+    def __init__(self) -> None:
+        self.flag = False
+    
+    def istriggered(self):
+        if self.flag:
+            self.flag = False
+            return True
+        return False
+
+    def trigger(self):
+        self.flag = True
 
 class AssistantManager:
     def __init__(self) -> None:
         self.assistantListener = AssistantListener()
+        self.assistantTrigger = AssistantTrigger()
+        pushtotalk.assistant_trigger = self.assistantTrigger
 
     def activate(self, callback):
         if configurations['google-assistant-enabled']:
@@ -401,9 +416,28 @@ def writeYouTubeCaches(playlist, query):
             'query': query,
         }))
 
+class StateListner:
+    def __init__(self, initial_state=None) -> None:
+        self.state = initial_state
+        self.callbacks = []
+        
+    def edit(self, value):
+        self.state = value
+        for method, args in self.callbacks:
+            method(*args)
+
+    def bind(self, method, *args):
+        self.callbacks.append((method, args))
+
+    def __eq__(self, value):
+        if isinstance(value, StateListner):
+            return self == value
+        return self.state == value
+
 class YouTubeMusicManager:
     STOPPED = 0
     PLAYING = 1
+    LOADING = 2
 
     def __init__(self) -> None:
         global creds
@@ -412,7 +446,7 @@ class YouTubeMusicManager:
         self.instance = vlc.Instance()
         self.player = self.instance.media_player_new()
         self.events = self.player.event_manager()
-        self.state = YouTubeMusicManager.STOPPED
+        self.state = StateListner(YouTubeMusicManager.STOPPED)
 
         self._ready = False
         self.current_playlist = None
@@ -433,6 +467,8 @@ class YouTubeMusicManager:
     
     def search(self, query=None, cnt=5, nextpage=False):
         try:
+            self.state.edit(YouTubeMusicManager.LOADING)
+
             # Use current query if query is None
             if query is None and self.current_query is not None:
                 query = self.current_query
@@ -472,6 +508,7 @@ class YouTubeMusicManager:
             print(f'An error occurred')
     
     def setPlayer(self, videoId):
+        self.state.edit(YouTubeMusicManager.LOADING)
         self._ready = False
 
         video_url = f"https://www.youtube.com/watch?v={videoId}"
@@ -486,9 +523,8 @@ class YouTubeMusicManager:
         self._ready = True
     
     def moveNext(self):
-        self.state = YouTubeMusicManager.PLAYING
-        if self.player.get_state() != vlc.State.Paused:
-            self.player.pause()
+        # self.state.edit(YouTubeMusicManager.LOADING)
+        self.player.pause()
 
         self.current_index += 1
         if self.current_index >= len(self.current_playlist):
@@ -496,15 +532,14 @@ class YouTubeMusicManager:
         try:
             self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
             self.player.play()
-            self.executeCallbacks()
+            self.state.edit(YouTubeMusicManager.PLAYING)
         except:
             self.moveNext()
         
 
     def movePrev(self):
-        self.state = YouTubeMusicManager.PLAYING
-        if self.player.get_state() != vlc.State.Paused:
-            self.player.pause()
+        # self.state.edit(YouTubeMusicManager.LOADING)
+        self.player.pause()
             
         self.current_index -= 1
         if self.current_index < 0:
@@ -512,46 +547,44 @@ class YouTubeMusicManager:
         try:
             self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
             self.player.play()
-            self.executeCallbacks()
+            self.state.edit(YouTubeMusicManager.PLAYING)
         except:
             self.movePrev()
 
     def play(self):
-        self.state = YouTubeMusicManager.PLAYING
+        # self.state.edit(YouTubeMusicManager.LOADING)
         try:
             if not self._ready:
                 if self.current_playlist is not None and self.current_query is not None:
                     if self.current_index is None:
                         self.current_index = 0
-                    self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
+                else:
+                    self.state.edit(YouTubeMusicManager.STOPPED)
+                    return
+                self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
             self.player.play()
-            self.executeCallbacks()
+            self.state.edit(YouTubeMusicManager.PLAYING)
         except:
             print('Skipped because an error occurred')
             self.moveNext()
             self.play()
 
     def pause(self):
-        self.state = YouTubeMusicManager.STOPPED
-        if not self.isPaused():
+        if self.player.get_state() != vlc.State.Paused:
             self.player.pause()
-            self.executeCallbacks()
+            self.state.edit(YouTubeMusicManager.STOPPED)
 
-    def bindCallback(self, method):
-        self.binded.append(method)
-    
-    def executeCallbacks(self):
-        for method in self.binded:
-            method()
+    def bindCallback(self, method, *args):
+        self.state.bind(method, *args)
         
     def isStopped(self):
         return self.state == YouTubeMusicManager.STOPPED
 
     def isPlaying(self):
         return self.state == YouTubeMusicManager.PLAYING
-    
-    def isPaused(self):
-        return self.player.get_state() == vlc.State.Paused
+
+    def isLoading(self):
+        return self.state == YouTubeMusicManager.LOADING
 
 
 # # Testbench code for bluetooth connection (RFCOMM)

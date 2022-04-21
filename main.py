@@ -25,6 +25,7 @@ widgetDefaultStyleSheet = 'background-color: black; border-style: solid; border-
 labelDefaultStyleSheet = 'border-style: none;'
 
 # Image urls
+assistant_logo = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'assistant_logo.PNG')
 button_play = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'play.PNG')
 button_pause = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'pause.PNG')
 button_next = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'next.PNG')
@@ -45,6 +46,9 @@ class AssistantThread(QThread):
     
     def run(self):
         self.manager.activate(self.acceptToken)
+
+    def trigger(self):
+        self.manager.assistantTrigger.trigger()
     
     def acceptToken(self, msg, token):
         if token is None:
@@ -215,6 +219,11 @@ class MyApp(QWidget):
         self.assistantMsgLabel = QLabel('Google Assistant')
         self.assistantMsgLabel.setStyleSheet(labelDefaultStyleSheet + 
             'color: white; font-size: 11pt; font-weight: bold; border-style: none;')
+        self.assistant_trigger_widget = QPushButton()
+        self.assistant_trigger_widget.setStyleSheet(f'border-style: none')
+        self.assistant_trigger_widget.clicked.connect(self.assistantThread.trigger)
+        self.assistant_trigger_widget.setIcon(QIcon(assistant_logo))
+        self.assistant_trigger_widget.setIconSize(QtCore.QSize(30, 30))
 
         # Generate main window layout and show that in full screen
         self.scheduleWidget = None   # schedule widget
@@ -291,7 +300,8 @@ class MyApp(QWidget):
         vbox.addStretch(1)
 
         hbox = QHBoxLayout()
-        hbox.addStretch(1)
+        # hbox.addStretch(1)
+        hbox.addWidget(self.assistant_trigger_widget)
         hbox.addWidget(self.assistantMsgLabel)
         hbox.addStretch(1)
         

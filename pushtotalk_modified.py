@@ -61,6 +61,7 @@ DEFAULT_GRPC_DEADLINE = 60 * 3 + 5
 
 # Custom pushtotalk variables 
 message_listener = None  # external listener
+assistant_trigger = None  # external trigger
 
 class ActionToken(object):
     def __init__(self, name, args):
@@ -508,7 +509,14 @@ def main(api_endpoint, credentials, project_id,
         wait_for_user_trigger = not once
         while True:
             if wait_for_user_trigger:
-                click.pause(info='Press Enter to send a new request...')
+                # if external trigger is defined, use external trigger
+                if assistant_trigger is not None:
+                    while True:
+                        if assistant_trigger.istriggered():
+                            break
+                else:
+                    click.pause(info='')
+                # END
             continue_conversation = assistant.assist()
             # wait for user trigger if there is no follow-up turn in
             # the conversation.
