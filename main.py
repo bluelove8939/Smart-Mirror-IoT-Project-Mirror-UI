@@ -244,7 +244,6 @@ class MyApp(QWidget):
         self.weatherWidget = self.generateWeatherWidget()
         self.calendarWidget = self.generateCalenderWidget()
         self.playerWidget = self.generateMusicPlayerWidget()
-        print(f'inside: {id(self.playerWidget)}')
 
         # Generating layout
         self.mainLayout = QVBoxLayout()
@@ -485,9 +484,18 @@ class MyApp(QWidget):
         elif token['type'] == 'refresh':
             self.refresh()
 
+        elif token['type'] == 'refresh_assistant':
+            self.refresh()
+            self.assistantMsgLabel.setText(token['args'][0])
+
         elif token['type'] == 'set_auto_interval':
             changeSettings('refresh_term', token['args'][0])
             self.refresh()
+
+        elif token['type'] == 'play_music_by_keyword':
+            self.musicPlayerModule.manager.search(token['args'][1])
+            self.musicPlayerModule.manager.play()
+            self.assistantMsgLabel.setText(token['args'][0])
         
         elif token['type'] == 'assistant_msg':
             self.assistantMsgLabel.setText(token['args'][0])

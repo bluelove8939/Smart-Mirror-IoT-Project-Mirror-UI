@@ -67,6 +67,9 @@ class ActionToken(object):
     def __init__(self, name, args):
         self.name = name
         self.args = args[:]
+    
+    def copy(self):
+        return ActionToken(name=self.name, args=self.args)
 
 def remove_vacancy_from_string(targetString):
     processedString = []
@@ -76,11 +79,43 @@ def remove_vacancy_from_string(targetString):
     return ''.join(processedString)
 
 predefined_tokens = {
-    '화면새로고침해줘': ActionToken(name='refresh', args=[]),
+    '화면새로고침해줘': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
+    '__arg__!노래틀어줘': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다'])
 }
 
 def get_predefined_token(targetString):
     targetString = remove_vacancy_from_string(targetString)
+
+    # if there's no positional argument, return given predefined token
+    if targetString in predefined_tokens.keys():
+        return predefined_tokens[targetString]
+
+    # parsing the predefined token
+    for form in predefined_tokens.keys():
+        form_split = form.split('!')
+        flag = False
+        is_valid = True
+        pivot = 0
+        parsed_args = []
+
+        for element in form_split:
+            if element == '__arg__':
+                flag = True
+            elif flag:
+                index = targetString.index(element)
+                if index == -1:
+                    is_valid = False
+                else:
+                    parsed_args.append(targetString[pivot:index])
+                    flag = False
+                    pivot = index + len(element)
+        
+        if is_valid:
+            generated_token = predefined_tokens[form].copy()
+            generated_token.args += parsed_args
+            return generated_token
+            
+    return None
     
 # END 
 
@@ -188,9 +223,9 @@ class SampleAssistant(object):
                     self.conversation_stream.stop_recording()
                     
                     # Generate token if nessasary and send it to external listener
-                    tokenName = remove_vacancy_from_string(transcript)
-                    if message_listener is not None and tokenName in predefined_tokens.keys():
-                        message_listener.edit(transcript, predefined_tokens[tokenName])
+                    generated_token = get_predefined_token(transcript)
+                    if message_listener is not None and generated_token is not None:
+                        message_listener.edit(transcript, generated_token)
                         play_system_response = False
                     # END
                     

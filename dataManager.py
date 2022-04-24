@@ -453,6 +453,8 @@ class YouTubeMusicManager:
         self.current_index = None
         self.current_query = None
 
+        self.service = build('youtube', 'v3', credentials=self.creds)
+
         try:
             cached_data = readYouTubeCaches()
             self.current_playlist = cached_data['playlist']
@@ -466,6 +468,7 @@ class YouTubeMusicManager:
         self.binded = []
     
     def search(self, query=None, cnt=5, nextpage=False):
+        print(f'search by query: {query}')
         try:
             self.state.edit(YouTubeMusicManager.LOADING)
 
@@ -475,18 +478,16 @@ class YouTubeMusicManager:
             elif query is None and self.current_query is None:
                 raise Exception('YouTube music manager error: query required')
 
-            service = build('youtube', 'v3', credentials=self.creds)
-
             # Send request
             if nextpage and self.nextPageToken is not None:
                 # Search by using the given keyword
-                search_result = service.search().list(
+                search_result = self.service.search().list(
                     q=query, part='snippet', maxResults=cnt, regionCode='KR',
                     type='video', videoCategoryId='10', pageToken=self.nextPageToken
                     ).execute()
             else:
                 # Search by using the given keyword
-                search_result = service.search().list(
+                search_result = self.service.search().list(
                     q=query, part='snippet', maxResults=cnt, regionCode='KR',
                     type='video', videoCategoryId='10'
                     ).execute()
@@ -503,14 +504,14 @@ class YouTubeMusicManager:
                 self.current_index = 0
             
             writeYouTubeCaches(self.current_playlist, self.current_query)
-
+            
         except:
             print(f'An error occurred')
     
     def setPlayer(self, videoId):
         self.state.edit(YouTubeMusicManager.LOADING)
         self._ready = False
-
+ 
         video_url = f"https://www.youtube.com/watch?v={videoId}"
         video = pafy.new(video_url)
         best = video.getbestaudio()
@@ -615,7 +616,7 @@ if __name__ == '__main__':
     import time
 
     manager = YouTubeMusicManager()
-    res = manager.search('zior park')
+    res = manager.search('김동률')
     manager.play()
 
     while True:
