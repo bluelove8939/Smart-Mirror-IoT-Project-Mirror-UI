@@ -16,7 +16,8 @@ with open(os.path.join(os.path.dirname(__file__), '..', 'assets', 'keys', 'apike
 
 status = 0
 
-def test_callback_func(event):
+@vlc.callbackmethod
+def test_callback_func(data):
     print('callback called')
     global status
     status = 1
@@ -34,6 +35,9 @@ player = Instance.media_player_new()
 Media = Instance.media_new(playurl)
 Media.get_mrl()
 player.set_media(Media)
+events = player.event_manager()
+events.event_attach(vlc.EventType.MediaPlayerEndReached, test_callback_func, 1)
+
 player.play()
 
 while status == 0:
