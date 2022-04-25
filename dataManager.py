@@ -6,6 +6,7 @@ import json
 import pafy
 import vlc
 import os.path
+from gi.repository import GObject as gobject
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -447,6 +448,8 @@ class YouTubeMusicManager:
         self.player = self.instance.media_player_new()
         self.events = self.player.event_manager()
         self.state = StateListner(YouTubeMusicManager.STOPPED)
+        
+        self.events.event_attach(vlc.EventType.MediaPlayerEndReached, self.autoMoveNext)
 
         self._ready = False
         self.current_playlist = None
@@ -535,7 +538,6 @@ class YouTubeMusicManager:
             self.state.edit(YouTubeMusicManager.PLAYING)
         except:
             self.moveNext()
-        
 
     def movePrev(self):
         # self.state.edit(YouTubeMusicManager.LOADING)
@@ -550,6 +552,10 @@ class YouTubeMusicManager:
             self.state.edit(YouTubeMusicManager.PLAYING)
         except:
             self.movePrev()
+    
+    @vlc.callbackmethod
+    def autoMoveNext(self, data):
+        gobject.idle_add(self.moveNext)
 
     def play(self):
         # self.state.edit(YouTubeMusicManager.LOADING)
