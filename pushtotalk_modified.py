@@ -93,32 +93,6 @@ def get_predefined_token(targetString):
         return predefined_tokens[targetString]
 
     # parsing the predefined token
-    for form in predefined_tokens.keys():
-        form_split = form.split('!')
-        flag = False
-        is_valid = True
-        pivot = 0
-        parsed_args = []
-
-        for element in form_split:
-            if element == '__arg__':
-                flag = True
-            elif flag:
-                index = targetString.index(element)
-                if index == -1:
-                    is_valid = False
-                else:
-                    parsed_args.append(targetString[pivot:index])
-                    flag = False
-                    pivot = index + len(element)
-        
-        if is_valid:
-            generated_token = predefined_tokens[form].copy()
-            generated_token.args += parsed_args
-            return generated_token
-            
-    return None
-    
     for form, custom_token in predefined_tokens.items():
         result = parse.parse(form, targetString)
         if result is not None:
