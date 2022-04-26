@@ -12,3 +12,6 @@ sudo pip install --upgrade google-api-python-client google-auth-httplib2 google-
 sudo apt-get install python3-dev libbluetooth-dev
 sudo apt-get install bluetooth blueman bluez
 sudo pip install --upgrade pybluez  # python bluetooth extension
+
+# String parse lib
+sudo pip3 install --upgrade parse

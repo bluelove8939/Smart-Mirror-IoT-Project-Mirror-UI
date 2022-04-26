@@ -59,7 +59,9 @@ CLOSE_MICROPHONE = embedded_assistant_pb2.DialogStateOut.CLOSE_MICROPHONE
 PLAYING = embedded_assistant_pb2.ScreenOutConfig.PLAYING
 DEFAULT_GRPC_DEADLINE = 60 * 3 + 5
 
-# Custom pushtotalk variables 
+# Custom pushtotalk variables
+import parse
+ 
 message_listener = None  # external listener
 assistant_trigger = None  # external trigger
 
@@ -67,9 +69,9 @@ class ActionToken(object):
     def __init__(self, name, args):
         self.name = name
         self.args = args[:]
-    
-    def copy(self):
-        return ActionToken(name=self.name, args=self.args)
+        
+    def copyWith(self, added_args):
+        self.args += list(added_args)
 
 def remove_vacancy_from_string(targetString):
     processedString = []
@@ -115,6 +117,14 @@ def get_predefined_token(targetString):
             generated_token.args += parsed_args
             return generated_token
             
+    return None
+    
+    for form, custom_token in predefined_tokens.items():
+        result = parse.parse(form, targetString)
+        if result is not None:
+            print(f"parsed result: {result}")
+            return custom_token.copyWith(result)
+    
     return None
     
 # END 
@@ -223,9 +233,9 @@ class SampleAssistant(object):
                     self.conversation_stream.stop_recording()
                     
                     # Generate token if nessasary and send it to external listener
-                    generated_token = get_predefined_token(transcript)
-                    if message_listener is not None and generated_token is not None:
-                        message_listener.edit(transcript, generated_token)
+                    custom_token = get_predefined_token(transcript)
+                    if message_listener is not None and custom_token is not None:
+                        message_listener.edit(transcript, custom_token)
                         play_system_response = False
                     # END
                     
