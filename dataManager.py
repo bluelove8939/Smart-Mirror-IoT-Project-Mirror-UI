@@ -533,7 +533,8 @@ class YouTubeMusicManager:
     def search(self, query=None, cnt=5, nextpage=False):
         print(f'search by query: {query}')
         try:
-            self.state.edit(YouTubeMusicManager.LOADING)
+            if not self.isStopped():
+                self.pause()
 
             # Use current query if query is None
             if query is None and self.current_query is not None:
@@ -567,6 +568,11 @@ class YouTubeMusicManager:
                 self.current_index = 0
             
             writeYouTubeCaches(self.current_playlist, self.current_query)
+
+            self.state.edit(YouTubeMusicManager.STOPPED)
+            self._ready = False
+
+            print('search completed')
             
         except:
             print(f'An error occurred')
@@ -616,9 +622,11 @@ class YouTubeMusicManager:
     
     @vlc.callbackmethod
     def autoMoveNext(self, data):
+        print('music auto move next called')
         gobject.idle_add(self.moveNext)
 
     def play(self):
+        print('music play called')
         # self.state.edit(YouTubeMusicManager.LOADING)
         try:
             if not self._ready:

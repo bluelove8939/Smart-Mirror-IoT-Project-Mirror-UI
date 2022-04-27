@@ -257,9 +257,8 @@ class SampleAssistant(object):
             concurrent.futures.wait(device_actions_futures)
         
         # If predefined action token is generated, do not play the system response
-        if play_system_response:
-            logging.info('Finished playing assistant response.')
-            self.conversation_stream.stop_playback()
+        logging.info('Finished playing assistant response.')
+        self.conversation_stream.stop_playback()
         # END
         return continue_conversation
 
@@ -538,6 +537,8 @@ def main(api_endpoint, credentials, project_id,
                 if assistant_trigger is not None:
                     while True:
                         if assistant_trigger.istriggered():
+                            if message_listener is not None:
+                                message_listener.edit('음성을 입력하세요', None)
                             break
                 else:
                     click.pause(info='')

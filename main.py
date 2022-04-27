@@ -109,8 +109,13 @@ class MusicPlayerModule(object):
         self.manager.bindCallback(self.refresh)
         self.title_widget = None
         self.play_button_widget = None
+        self.play_button_signal_connected = False
 
         self.drawWindow()
+
+    def disconnectPlayButtonSignal(self):
+        if self.play_button_signal_connected:
+            self.play_button_widget.clicked.disconnect()
 
     def drawWindow(self):
         self.widget = QGroupBox()
@@ -134,12 +139,14 @@ class MusicPlayerModule(object):
 
         self.play_button_widget = QPushButton()
         self.play_button_widget.setStyleSheet(f'border-style: none')
+        self.disconnectPlayButtonSignal()
         if self.manager.isPlaying():
             self.play_button_widget.clicked.connect(self.manager.pause)
             self.play_button_widget.setIcon(QIcon(button_pause))
         else:
             self.play_button_widget.clicked.connect(self.manager.play)
             self.play_button_widget.setIcon(QIcon(button_play))
+        self.play_button_signal_connected = True
         self.play_button_widget.setIconSize(QtCore.QSize(50, 50))
 
         next_button_widget = QPushButton()
@@ -171,12 +178,14 @@ class MusicPlayerModule(object):
             music_title = self.manager.current_playlist[self.manager.current_index]['snippet']['title']
         self.title_widget.setText(music_title)
 
+        self.disconnectPlayButtonSignal()
         if self.manager.isPlaying():
             self.play_button_widget.clicked.connect(self.manager.pause)
             self.play_button_widget.setIcon(QIcon(button_pause))
         else:
             self.play_button_widget.clicked.connect(self.manager.play)
             self.play_button_widget.setIcon(QIcon(button_play))
+        self.play_button_signal_connected = True
 
 
 # Main user interface
@@ -497,6 +506,8 @@ class MyApp(QWidget):
             self.refresh()
 
         elif token['type'] == 'play_music_by_keyword':
+            if not self.musicPlayerModule.manager.isStopped():
+                self.musicPlayerModule.manager.pause()
             self.musicPlayerModule.manager.search(token['args'][1])
             self.musicPlayerModule.manager.play()
             self.assistantMsgLabel.setText(token['args'][0])
