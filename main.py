@@ -15,6 +15,7 @@ from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
 from dataManager import vlc
+from dataManager import dataManagerInitListener
 from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager
 from dataManager import changeSettings, saveSettings, getSettings, weekDay, lastDay
 
@@ -45,6 +46,9 @@ class AssistantThread(QThread):
         self.manager = AssistantManager()
     
     def run(self):
+        while not dataManagerInitListener.isInitialized():
+            continue
+
         self.manager.activate(self.acceptToken)
 
     def trigger(self):

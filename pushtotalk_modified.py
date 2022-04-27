@@ -393,8 +393,9 @@ def main(api_endpoint, credentials, project_id,
     # Load OAuth 2.0 credentials.
     try:
         with open(credentials, 'r') as f:
-            credentials = google.oauth2.credentials.Credentials(token=None,
-                                                                **json.load(f))
+            # credentials = google.oauth2.credentials.Credentials(token=None,
+            #                                                     **json.load(f))
+            credentials = google.oauth2.credentials.Credentials(**json.load(f))
             http_request = google.auth.transport.requests.Request()
             credentials.refresh(http_request)
     except Exception as e:

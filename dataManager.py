@@ -20,6 +20,43 @@ import bluetooth
 from pushtotalk_modified import PLAYING  # pybluez library
 
 
+# Data Manager Init Listener
+# 
+# Note:
+#   Checks whether device is already initialized
+#   Needs to be initialized:
+#     * readApikey: read API keys
+#     * readDeviceConfig: read device configuration
+#     * readSettings: read device settings from local storage
+#     * googleAccountAuth: get authentication for user's google account
+#     * googleAssistantAuth: get authentivation for google assistant SDK
+
+class DataManagerInitListener:
+    INITIALIZED = 0
+    NOT_INITIALIZED = 1
+
+    def __init__(self) -> None:
+        self.states = {
+            'readApikey': DataManagerInitListener.NOT_INITIALIZED,
+            'readDeviceConfig': DataManagerInitListener.NOT_INITIALIZED,
+            'readSettings': DataManagerInitListener.NOT_INITIALIZED,
+            'googleAccountAuth': DataManagerInitListener.NOT_INITIALIZED,
+            'googleAssistantAuth': DataManagerInitListener.NOT_INITIALIZED,
+        }
+    
+    def setInitialized(self, key):
+        if key in self.states.keys():
+            self.states[key] = DataManagerInitListener.INITIALIZED
+
+    def isInitialized(self):
+        for value in self.states.values():
+            if value != DataManagerInitListener.INITIALIZED:
+                return False
+        return True
+
+dataManagerInitListener = DataManagerInitListener()
+
+
 # Reading required apikeys
 #
 # Note:
@@ -36,6 +73,8 @@ with open(os.path.join('assets', 'keys', 'apikeys.json'), 'rt') as keyFile:
     readApiKeys = json.loads(keyFile.read())
     for k, v in readApiKeys.items():
         apikeys[k] = v
+
+dataManagerInitListener.setInitialized('readApikey')
 
 
 # Reading device configuration
@@ -56,6 +95,8 @@ try:
             configurations[k] = v
 except:
     print('config.json not found')
+
+dataManagerInitListener.setInitialized('readDeviceConfig')
 
 
 # Reading settings file
@@ -90,12 +131,39 @@ def saveSettings():
 def getSettings(name):
     return applicationSettings[name]
 
+dataManagerInitListener.setInitialized('readSettings')
 
-# Google login
+
+# Google login function
+#
+# Note:
+#   Function for obtaining OAuth2 credential
+
+def makeCredentialFromClientfile(clientfile, scopes, savepath):
+    creds = None
+
+    if os.path.exists(savepath):
+        creds = Credentials.from_authorized_user_file(tokenpath, scopes)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
+            creds = flow.run_local_server()
+        with open(savepath, 'w') as savefile:
+            savefile.write(creds.to_json())
+
+    return creds
+
+
+# Google login with user authentication
 #
 # Note:
 #   Login to google and generate user token for accessing private information
+#   This login process includes user account login and google assistant authentication
+#   (Processed by different browser window) 
 
+# User account authentication process
 google_scope = []
 if configurations['google-drive-enabled']:
     google_scope.append('https://www.googleapis.com/auth/drive.readonly')
@@ -110,18 +178,19 @@ if len(google_scope) != 0:
 
     # Generate login token via web browser
     tokenpath = os.path.join('assets', 'user_account_tokens', 'token.json')
-    creds = None
-    if os.path.exists(tokenpath):
-        creds = Credentials.from_authorized_user_file(tokenpath, google_scope)
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(f'assets/keys/{googleclientIDfilename}', google_scope)
-            creds = flow.run_local_server()
-        print(creds.to_json())
-        with open(tokenpath, 'w') as token:
-            token.write(creds.to_json())
+    creds = makeCredentialFromClientfile(googleclientIDfilename, google_scope, tokenpath)
+
+dataManagerInitListener.setInitialized('googleAccountAuth')
+
+# Google assistant authentication process
+if configurations['google-assistant-enabled']:
+    # Get authentication via browser if there's no credential file
+    credpath = os.path.join(os.path.expanduser('~'), '.config', 'google-oauthlib-tool', 'credentials.json')
+    clientSecretPath = os.path.join('assets', 'keys', apikeys['googleassistantclientfilename'])
+    assistant_scope = ['https://www.googleapis.com/auth/assistant-sdk-prototype']
+    assistant_creds = makeCredentialFromClientfile(clientSecretPath, assistant_scope, credpath)
+
+dataManagerInitListener.setInitialized('googleAssistantAuth')
 
 
 # Weather data downloader
@@ -332,20 +401,11 @@ def weekDay(year, month, day):
 #   Note that this modified pushtotalk.py is licenced by Google and cannot be used in
 #   commercial purpose.
 
-google_assistant_activate = lambda message_listner: None
+google_assistant_activate = lambda: None
 
 if configurations['google-assistant-enabled']:
     import pushtotalk_modified as pushtotalk
     google_assistant_activate = pushtotalk.main
-
-    # Get authentication via browser if there's no credential file
-    credpath = os.path.join(os.path.expanduser('~'), '.config', 'google-oauthlib-tool')
-    clientSecretPath = os.path.join(apikeysDirectoryPath, apikeys['googleassistantclientfilename'])
-    if 'credentials.json' not in os.listdir(credpath):
-        os.system(f"google-oauthlib-tool --scope https://www.googleapis.com/auth/assistant-sdk-prototype --save --headless --client-secrets {clientSecretPath}")
-    # assistantCredsFile = os.path.join(credpath, 'credentials.json')
-    # with open(assistantCredsFile, 'r') as credsfile:
-    #     credentials = Credentials(token=None, **json.load(credsfile))
 
 class AssistantListener(object):
     def __init__(self) -> None:
