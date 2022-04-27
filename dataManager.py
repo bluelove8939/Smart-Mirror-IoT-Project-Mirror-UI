@@ -669,31 +669,31 @@ class YouTubeMusicManager:
 # # Testbench code for google assistant (custom assistant-sdk-python)
 # if __name__ == '__main__':
 #     manager = AssistantManager()
-    
+#
 #     def testCallbackFunc(msg, token):
 #         print(f'===== {msg}')
 #         print(f'===== {token}')
-    
+#   
 #     manager.activate(testCallbackFunc)
 
 
 # Testbench code for youtube music manager
-if __name__ == '__main__':
-    import time
-
-    manager = YouTubeMusicManager()
-    res = manager.search('김동률')
-    manager.play()
-
-    while True:
-        c = input('Enter command: ')
-        if c == 'play':
-            manager.play()
-        if c == 'pause':
-            manager.pause()
-        if c == 'next':
-            manager.moveNext()
-            manager.play()
-        if c == 'prev':
-            manager.movePrev()
-            manager.play()
+# if __name__ == '__main__':
+#     import time
+#
+#     manager = YouTubeMusicManager()
+#     res = manager.search('zior park')
+#     manager.play()
+#
+#     while True:
+#         c = input('Enter command: ')
+#         if c == 'play':
+#             manager.play()
+#         if c == 'pause':
+#             manager.pause()
+#         if c == 'next':
+#             manager.moveNext()
+#             manager.play()
+#         if c == 'prev':
+#             manager.movePrev()
+#             manager.play()

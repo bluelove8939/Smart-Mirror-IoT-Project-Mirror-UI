@@ -71,7 +71,10 @@ class ActionToken(object):
         self.args = args[:]
         
     def copyWith(self, added_args):
-        self.args += list(added_args)
+        copied = ActionToken(name=self.name, args=self.args[:])
+        copied.args += list(added_args)
+        return copied
+        
 
 def remove_vacancy_from_string(targetString):
     processedString = []
@@ -82,7 +85,7 @@ def remove_vacancy_from_string(targetString):
 
 predefined_tokens = {
     '화면새로고침해줘': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
-    '__arg__!노래틀어줘': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다'])
+    '{}노래틀어줘': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다'])
 }
 
 def get_predefined_token(targetString):
@@ -96,7 +99,6 @@ def get_predefined_token(targetString):
     for form, custom_token in predefined_tokens.items():
         result = parse.parse(form, targetString)
         if result is not None:
-            print(f"parsed result: {result}")
             return custom_token.copyWith(result)
     
     return None
@@ -170,6 +172,7 @@ class SampleAssistant(object):
         # Custom pushtotalk variables and flags
         transcript = ''
         play_system_response = True
+        custom_token_sent = False
         # END
         
         continue_conversation = False
@@ -209,7 +212,9 @@ class SampleAssistant(object):
                     # Generate token if nessasary and send it to external listener
                     custom_token = get_predefined_token(transcript)
                     if message_listener is not None and custom_token is not None:
-                        message_listener.edit(transcript, custom_token)
+                        if not custom_token_sent:
+                            message_listener.edit(transcript, custom_token)
+                            custom_token_sent = True
                         play_system_response = False
                     # END
                     
