@@ -1,3 +1,4 @@
+import logging
 import os
 import requests
 import json
@@ -17,9 +18,8 @@ from azure.cognitiveservices.vision.face.models import TrainingStatusType, Perso
 import cv2
 
 
-FACE_API_ENDPOINT = 'my-endpoint'
-FACE_API_KEY = None
-NO_EXCEPTION_MSG = 'NO EXCEPTION'
+NO_EXCEPTION_MSG = 'no exception'
+NO_ITERATION_MSG = 'no further iteration'
 
 
 # Azure Face API
@@ -32,30 +32,37 @@ NO_EXCEPTION_MSG = 'NO EXCEPTION'
 #   https://docs.microsoft.com/ko-kr/azure/cognitive-services/face/quickstarts/client-libraries?tabs=visual-studio&pivots=programming-language-python
 
 class AzureFaceApi:
-    def __init__(self, apikey=FACE_API_KEY):
-        self.endpoint = 'https://' + FACE_API_ENDPOINT + '.cognitiveservices.azure.com/'
+    def __init__(self, apikey, endpoint):
+        self.endpoint = 'https://' + endpoint + '.cognitiveservices.azure.com/'
         self.apikey = apikey
-        self.face_client = None
+        self.face_client = FaceClient(self.endpoint, CognitiveServicesCredentials(self.apikey))
 
     def detect_face_src(self, image_path):
         if self.apikey is None:
             raise Exception('FACE_API_KEY required: initialize FACE_API_KEY variable')
-        if self.face_client is None:
-            self.face_client = FaceClient(self.endpoint, CognitiveServicesCredentials(self.apikey))
 
         # initialize variable in Json format, to return exception string
         j = json.loads('{}')
 
+        logging.info('[FACE API] Generating img stream')
         frame = cv2.imread(image_path)
         _, buf = cv2.imencode('.jpg', frame) # ret
         stream = io.BytesIO(buf)
-        detected_faces = self.face_client.face.detect_with_stream(
-            image=stream, 
-            return_face_attributes=["emotion", "qualityForRecognition"], 
-            recognition_model='recognition_04', 
-            detection_model='detection_01'
-        )
-        if not detected_faces:
+
+        logging.info('[FACE API] Detecting emotion')
+        try:
+            detected_faces = self.face_client.face.detect_with_stream(
+                image=stream, 
+                return_face_attributes=["emotion", "qualityForRecognition"], 
+                recognition_model='recognition_04', 
+                detection_model='detection_01'
+            )
+            if not detected_faces:
+                msg = {'exception': 'No face detected from image'}
+                j.update(msg)
+                return j
+        except:
+            logging.error('[FACE API] Fatal error ocurred on sending request')
             msg = {'exception': 'No face detected from image'}
             j.update(msg)
             return j
@@ -65,7 +72,7 @@ class AzureFaceApi:
         
         # if quality of output inference is not (high, medium), it is not reliable.
         if qfr[1] != 'high' and qfr[1] != 'medium':
-            msg = {'exception': 'output emotion probabilities are not reliable'}
+            msg = {'exception': NO_ITERATION_MSG}
             j.update(msg)
             return j
         

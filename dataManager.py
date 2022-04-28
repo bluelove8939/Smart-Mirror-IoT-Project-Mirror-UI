@@ -121,7 +121,6 @@ defaultApplicationSettings = {
     'lat': 37.56779,  # latitude (initialized as Seoul, Korea)
     'lon': 126.97765,  # longitude (initialized as Seoul, Korea)
     'refresh_term': 30,  # refresh term (initialized as 30 seconds)
-    'face_api_endpoint': 'my-endpoint',  # face api endpoint (initialized as 'my-endpoint')
 }
 
 with open('settings.json', 'rt') as settingsFile:
@@ -480,9 +479,7 @@ if "youtubeapikey" in apikeys.keys():
     pafy.set_api_key(apikeys["youtubeapikey"])
 
 if configurations['face-emotion-detection-enabled']:
-    face_emotion_detection.azure_api_wrapper.FACE_API_ENDPOINT = applicationSettings['face_api_endpoint']  # azure face api endpoint setup
-    face_emotion_detection.azure_api_wrapper.FACE_API_KEY = apikeys['azureface']  # azure face api key setup
-    faceEmotionDetectModule = face_emotion_detection.MirrorFaceDetect()
+    faceEmotionDetectModule = face_emotion_detection.MirrorFaceDetect(face_apikey=apikeys['azureface'], face_api_endpoint=apikeys['azureface-endpoint'])
 
 def readYouTubeCaches():
     with open(os.path.join(cachesDirectoryPath, 'youtube_cache.json'), 'r') as cache:
@@ -559,17 +556,22 @@ class YouTubeMusicManager:
 
         if emotion_result['exception'] != face_emotion_detection.azure_api_wrapper.NO_EXCEPTION_MSG:
             logging.error('[YOUTUBE MUSIC] Exception occurred on detecting face emotion')
-            logging.error(f"[FACE EMOTION] {emotion_result['exception']}")
-            return
+            return False
 
         pref_result, max_value = None, 0
 
         for key, value in emotion_result.items():
-            if value > max_value:
-                max_value = value
+            if key == 'exception':
+                continue
+            
+            if float(value) > max_value:
+                max_value = float(value)
                 pref_result = key
         
+        logging.info(f'[YOUTUBE MUSIC] Face emotion estimation: {pref_result}')
+        
         self.search(query=f"{pref_result} musics")
+        return True
     
     def search(self, query=None, cnt=5, nextpage=False):
         try:
@@ -675,6 +677,9 @@ class YouTubeMusicManager:
                     return
                 self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
             self.player.play()
+            if self.player.get_state() == vlc.State.Error:
+                logging.error('[YOUTUBE MUSIC] Error ocurred on playing music')
+                raise Exception()
             self.state.edit(YouTubeMusicManager.PLAYING)
         except:
             logging.info('[YOUTUBE MUSIC] Skipped because an error occurred on playing music')
@@ -745,3 +750,9 @@ class YouTubeMusicManager:
 #         if c == 'prev':
 #             manager.movePrev()
 #             manager.play()
+
+
+# Testbench code for face emotion detection
+if __name__ == '__main__':
+    face_emotion_module = face_emotion_detection.MirrorFaceDetect(apikeys['azureface'], apikeys['azureface-endpoint'])
+    print(face_emotion_module.detect_motion_webcam())

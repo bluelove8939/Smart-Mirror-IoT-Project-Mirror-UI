@@ -637,6 +637,13 @@ class MyApp(QWidget):
             self.musicPlayerModule.manager.search(token['args'][1])
             self.musicPlayerModule.manager.play()
             self.assistantMsgLabel.setText(token['args'][0])
+
+        elif token['type'] == 'expression':
+            if not self.musicPlayerModule.manager.isStopped():
+                self.musicPlayerModule.manager.pause()
+            result_valid = self.musicPlayerModule.manager.searchByEmotion()
+            if result_valid:
+                self.musicPlayerModule.manager.play()
         
         elif token['type'] == 'assistant':
             self.assistantThread.trigger()
