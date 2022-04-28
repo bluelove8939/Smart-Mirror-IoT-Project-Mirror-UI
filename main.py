@@ -1,10 +1,11 @@
 import os
 import sys
+import time
 import functools
 
 from PyQt5 import sip
 from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5.QtWidgets import QLabel, QGroupBox, QPushButton
+from PyQt5.QtWidgets import QLabel, QGroupBox, QPushButton, QMessageBox
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout  # Layouts
 
 from PyQt5 import QtCore
@@ -15,10 +16,12 @@ from PyQt5.QtCore import QThread
 
 from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
-from dataManager import vlc
-from dataManager import dataManagerInitListener
-from dataManager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager
-from dataManager import changeSettings, saveSettings, getSettings, weekDay, lastDay
+from data_manager import vlc
+from data_manager import dataManagerInitListener
+from data_manager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager
+from data_manager import changeSettings, saveSettings, getSettings, weekDay, lastDay
+
+from hardware_manager import MoistureManager
 
 
 # Widget styles
@@ -232,9 +235,9 @@ class SidebarModule:
             SidebarConfig(name=3, icon_url=sidebar_select, action_token=SidebarActionToken('select')),
         ],
         MODE_SELECT: [
-            SidebarConfig(name=0, icon_url=sidebar_expression, action_token=SidebarActionToken('expression')),
-            SidebarConfig(name=1, icon_url=sidebar_water, action_token=SidebarActionToken('water')),
-            SidebarConfig(name=2, icon_url=sidebar_cloth, action_token=SidebarActionToken('cloth')),
+            SidebarConfig(name=0, icon_url=sidebar_expression, action_token=SidebarActionToken('play_music_by_emotion')),
+            SidebarConfig(name=1, icon_url=sidebar_water, action_token=SidebarActionToken('moisture')),
+            SidebarConfig(name=2, icon_url=sidebar_cloth, action_token=SidebarActionToken('style')),
             SidebarConfig(name=3, icon_url=sidebar_back, action_token=SidebarActionToken('back')),
         ],
     }
@@ -289,6 +292,31 @@ class SidebarModule:
         })
 
 
+class AlertDialog(QMessageBox):
+    def __init__(self, title, msg, timeout=3, parent=None):
+        super(AlertDialog, self).__init__(parent)
+        self.setWindowTitle(title)
+        self.setStyleSheet('font-size: 10pt; color: white')
+        self.time_to_wait = timeout
+        self.msg = msg
+        self.setText(f"{self.msg}\n({self.time_to_wait}초 뒤에 자동으로 창이 닫힙니다)")
+        self.setStandardButtons(QMessageBox.NoButton)
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.changeContent)
+        self.timer.start()
+
+    def changeContent(self):
+        self.setText(f"{self.msg}\n({self.time_to_wait}초 뒤에 자동으로 창이 닫힙니다)")
+        self.time_to_wait -= 1
+        if self.time_to_wait <= 0:
+            self.close()
+
+    def closeEvent(self, event):
+        self.timer.stop()
+        event.accept()
+
+
 # Main user interface
 #
 # Note:
@@ -304,6 +332,7 @@ class MyApp(QWidget):
         self.scheduleDownloader = ScheduleDownloader()
         self.musicPlayerModule = MusicPlayerModule()
         self.sidebarModule = SidebarModule(parent=self)
+        self.moistureModule = MoistureManager()
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
@@ -542,7 +571,6 @@ class MyApp(QWidget):
         vbox.addLayout(headerLayout)
         vbox.addStretch(1)
         
-        
         # 2. Layout for weekdays
         calenderBodyGridLayout = QGridLayout()
         weekdayNames = ['일', '월', '화', '수', '목', '금', '토']
@@ -554,7 +582,6 @@ class MyApp(QWidget):
             else:
                 lbl.setStyleSheet(labelDefaultStyleSheet + 'font-size: 9pt; font-weight: bold; color: white;')
             calenderBodyGridLayout.addWidget(lbl, 0, cidx)
-        
 
         # 3. Layout for calender body
         ridx, cidx = 1, weekDay(targetYear, targetMonth, 1)
@@ -638,12 +665,29 @@ class MyApp(QWidget):
             self.musicPlayerModule.manager.play()
             self.assistantMsgLabel.setText(token['args'][0])
 
-        elif token['type'] == 'expression':
+        elif token['type'] == 'play_music_by_emotion':
             if not self.musicPlayerModule.manager.isStopped():
                 self.musicPlayerModule.manager.pause()
             result_valid = self.musicPlayerModule.manager.searchByEmotion()
             if result_valid:
                 self.musicPlayerModule.manager.play()
+
+        elif token['type'] == 'moisture':
+            msg = ""
+            measured_results = []
+
+            try:
+                measured_results = self.moistureModule.measure(max_cnt=7)
+                measured_results.sort()
+                median_value = measured_results[len(measured_results) // 2]
+                msg = f"측정된 결과는 다음과 같습니다: {median_value}"
+                if len(measured_results) < 4:
+                    msg += '\n경고: 결과값이 부족하여 측정된 결과가 정확하지 않을 수 있습니다.'
+            except:
+                msg = "측정 중 심각한 오류가 발생하였습니다.\n센서가 제대로 동작하고 있는지 확인하세요."
+
+            alertDialog = AlertDialog(title='피부 수분측정', msg=msg, timeout=5, parent=self)
+            alertDialog.exec_()
         
         elif token['type'] == 'assistant':
             self.assistantThread.trigger()

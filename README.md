@@ -121,3 +121,19 @@ Before enabling this feature, you need to install webcam or raspberry pi camera 
 If you already checked your device works fine, enable this feature simply by Eediting config.json just like below:
 
     "face-emotion-detection-enabled": true
+
+
+## Skin moisture measuring feature setup guide
+
+This feature is designed by codeveloper named 'kimBoeGeun'.
+Note that codes listed below are originally written and licensed by him:
+
+    moisture_driver.py
+    hardware_manger.py
+
+You can access to the github repository of original face emotion detection project by the link below:
+
+    https://github.com/kimBoeGeun/jongsul_KBG
+
+Please follow the instruction from the repository above.
+Make sure that you already have your sensor attached to the device.
