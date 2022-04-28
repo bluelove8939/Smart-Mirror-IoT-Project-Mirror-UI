@@ -85,7 +85,30 @@ def remove_vacancy_from_string(targetString):
 
 predefined_tokens = {
     '화면새로고침해줘': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
-    '{}노래틀어줘': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다'])
+
+    # Play music by keywords
+    '{}노래틀어': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
+    '{}음악틀어': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
+    '{}노래재생': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
+    '{}음악재생': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
+    '{}노래재생해': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
+    '{}음악재생해': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
+    '{}노래틀어줘': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
+    '{}음악틀어줘': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
+    '{}노래재생해줘': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
+    '{}음악재생해줘': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
+
+    # Play music by face emotion detection
+    '표정인식해서음악틀어': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서노래틀어': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서음악틀어줘': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서노래틀어줘': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서음악재생': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서노래재생': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서음악재생해': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서노래재생해': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서음악재생해줘': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서노래재생해줘': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
 }
 
 def get_predefined_token(targetString):
