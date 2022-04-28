@@ -499,6 +499,7 @@ class YouTubeMusicManager:
     STOPPED = 0
     PLAYING = 1
     LOADING = 2
+    INVALID = 3
 
     def __init__(self) -> None:
         global creds
@@ -507,7 +508,7 @@ class YouTubeMusicManager:
         self.instance = vlc.Instance()
         self.player = self.instance.media_player_new()
         self.events = self.player.event_manager()
-        self.state = StateListner(YouTubeMusicManager.STOPPED)
+        self.state = StateListner(YouTubeMusicManager.INVALID)
         
         self.events.event_attach(vlc.EventType.MediaPlayerEndReached, self.autoMoveNext)
 
@@ -525,6 +526,7 @@ class YouTubeMusicManager:
             self.current_query = cached_data['query']
             self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
             self._ready = True
+            self.state.edit(YouTubeMusicManager.STOPPED)
         except:
             print('Cannot find youtube caches')
 
@@ -622,11 +624,9 @@ class YouTubeMusicManager:
     
     @vlc.callbackmethod
     def autoMoveNext(self, data):
-        print('music auto move next called')
         gobject.idle_add(self.moveNext)
 
     def play(self):
-        print('music play called')
         # self.state.edit(YouTubeMusicManager.LOADING)
         try:
             if not self._ready:
@@ -660,6 +660,9 @@ class YouTubeMusicManager:
 
     def isLoading(self):
         return self.state == YouTubeMusicManager.LOADING
+
+    def isInvalid(self):
+        return self.state == YouTubeMusicManager.INVALID
 
 
 # # Testbench code for bluetooth connection (RFCOMM)

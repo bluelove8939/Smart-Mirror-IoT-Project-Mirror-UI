@@ -1,5 +1,6 @@
 import os
 import sys
+import functools
 
 from PyQt5 import sip
 from PyQt5.QtWidgets import QApplication, QWidget
@@ -26,12 +27,24 @@ widgetDefaultStyleSheet = 'background-color: black; border-style: solid; border-
 labelDefaultStyleSheet = 'border-style: none;'
 
 # Image urls
-assistant_logo = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'assistant_logo.PNG')
-button_play = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'play.PNG')
-button_pause = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'pause.PNG')
-button_next = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'next.PNG')
-button_prev = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'prev.PNG')
-button_opening = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images', 'opening.PNG')
+imgdir = os.path.join(os.path.abspath(os.path.curdir), 'assets', 'images')
+assistant_logo = os.path.join(imgdir, 'assistant_logo.PNG')
+button_play = os.path.join(imgdir, 'play.PNG')
+button_pause = os.path.join(imgdir, 'pause.PNG')
+button_next = os.path.join(imgdir, 'next.PNG')
+button_prev = os.path.join(imgdir, 'prev.PNG')
+button_opening = os.path.join(imgdir, 'opening.PNG')
+
+sidebar_imgdir = os.path.join(imgdir, 'sidebar_icons')
+sidebar_assistant = os.path.join(sidebar_imgdir, 'sidebar_assistant.PNG')
+sidebar_back = os.path.join(sidebar_imgdir, 'sidebar_back.PNG')
+sidebar_cloth = os.path.join(sidebar_imgdir, 'sidebar_cloth.PNG')
+sidebar_expression = os.path.join(sidebar_imgdir, 'sidebar_expression.PNG')
+sidebar_play = os.path.join(sidebar_imgdir, 'sidebar_play.PNG')
+sidebar_refresh = os.path.join(sidebar_imgdir, 'sidebar_refresh.PNG')
+sidebar_select = os.path.join(sidebar_imgdir, 'sidebar_select.PNG')
+sidebar_water = os.path.join(sidebar_imgdir, 'sidebar_water.PNG')
+
 
 # Google Assistant thread
 # 
@@ -188,6 +201,94 @@ class MusicPlayerModule(object):
         self.play_button_signal_connected = True
 
 
+# Sidebar Module
+#
+# Note:
+#   Manages sidebar widget of main window
+
+class SidebarConfig:
+    def __init__(self, name, icon_url, action_token) -> None:
+        self.name = name
+        self.icon_url = icon_url
+        self.action_token = action_token
+
+class SidebarActionToken:
+    def __init__(self, name, args=[]) -> None:
+        self.name = name
+        self.args = args[:]
+
+class SidebarModule:
+    MODE_MAIN = 0
+    MODE_SELECT = 1
+    MODE_SKIN = 2   # Skin condition mode (BIA sensor)
+    MODE_SOUND = 3  # Music recommendation mode (face and emotion detection)
+    MODE_STYLE = 4  # Style codinator mode (reverse image API)
+
+    configs = {
+        MODE_MAIN: [
+            SidebarConfig(name=0, icon_url=sidebar_refresh, action_token=SidebarActionToken('refresh')),
+            SidebarConfig(name=1, icon_url=sidebar_play, action_token=SidebarActionToken('music_autoplay')),
+            SidebarConfig(name=2, icon_url=sidebar_assistant, action_token=SidebarActionToken('assistant')),
+            SidebarConfig(name=3, icon_url=sidebar_select, action_token=SidebarActionToken('select')),
+        ],
+        MODE_SELECT: [
+            SidebarConfig(name=0, icon_url=sidebar_expression, action_token=SidebarActionToken('expression')),
+            SidebarConfig(name=1, icon_url=sidebar_water, action_token=SidebarActionToken('water')),
+            SidebarConfig(name=2, icon_url=sidebar_cloth, action_token=SidebarActionToken('cloth')),
+            SidebarConfig(name=3, icon_url=sidebar_back, action_token=SidebarActionToken('back')),
+        ],
+    }
+
+    def __init__(self, parent) -> None:
+        self.mode = SidebarModule.MODE_MAIN
+        self.parent = parent  # main GUI widget that includes this sidebar module (requires 'takeAction' method)
+        self.widget = None
+        self.buttons = []
+        self.initWindow()
+
+    def initWindow(self):
+        self.widget = QGroupBox()
+        mainlayout = QVBoxLayout()
+        mainlayout.addStretch(1)
+
+        for idx in range(4):
+            button = QPushButton()
+            button.setStyleSheet(f'border-style: none')
+            button.clicked.connect(functools.partial(self.trigger, idx))
+            button.setIcon(QIcon(SidebarModule.configs[self.mode][idx].icon_url))
+            button.setIconSize(QtCore.QSize(20, 20))
+            self.buttons.append(button)
+
+            mainlayout.addWidget(button)
+            mainlayout.addStretch(1)
+
+        self.widget.setLayout(mainlayout)
+
+    def changeMode(self, nxt_mode):
+        if nxt_mode not in SidebarModule.configs.keys():
+            return
+        if self.mode == nxt_mode:
+            return
+        
+        for idx in range(4):
+            self.buttons[idx].setIcon(QIcon(SidebarModule.configs[nxt_mode][idx].icon_url))
+        
+        self.mode = nxt_mode
+
+    def trigger(self, idx):
+        targetToken = SidebarModule.configs[self.mode][idx].action_token
+
+        if targetToken.name == 'select':
+            self.changeMode(SidebarModule.MODE_SELECT)
+        elif targetToken.name == 'back':
+            self.changeMode(SidebarModule.MODE_MAIN)
+
+        self.parent.takeAction(token={
+            'type': targetToken.name,
+            'args': targetToken.args,
+        })
+
+
 # Main user interface
 #
 # Note:
@@ -202,6 +303,7 @@ class MyApp(QWidget):
         self.weatherDownloader = WeatherDownloader()
         self.scheduleDownloader = ScheduleDownloader()
         self.musicPlayerModule = MusicPlayerModule()
+        self.sidebarModule = SidebarModule(parent=self)
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
@@ -244,6 +346,7 @@ class MyApp(QWidget):
         self.weatherWidget = None    # weather widget
         self.calendarWidget = None   # calendar widget
         self.playerWidget = None     # youtube music player widget
+        self.sidebarWidget = None    # sidebar widget
         self.mainLayout = None
         self.drawWindow()  # generate main layout and set widget layout as main layout
 
@@ -257,6 +360,7 @@ class MyApp(QWidget):
         self.weatherWidget = self.generateWeatherWidget()
         self.calendarWidget = self.generateCalenderWidget()
         self.playerWidget = self.generateMusicPlayerWidget()
+        self.sidebarWidget = self.generateSidebarWidget()
 
         # Generating layout
         self.mainLayout = QVBoxLayout()
@@ -265,13 +369,18 @@ class MyApp(QWidget):
         
         self.mainLayout.addStretch(1)
 
+        sidebarLayout = QHBoxLayout()
+        sidebarLayout.addStretch(1)
+        sidebarLayout.addWidget(self.sidebarWidget)
+        self.mainLayout.addLayout(sidebarLayout)
+
+        self.mainLayout.addStretch(1)
+
         centerLayout = QHBoxLayout()
         centerLayout.addWidget(self.scheduleWidget)
         centerLayout.addStretch(1)
         centerLayout.addWidget(self.playerWidget)
         self.mainLayout.addLayout(centerLayout)
-        
-        self.mainLayout.addStretch(1)
 
         bottomLayout = QHBoxLayout()
         bottomLayout.addWidget(self.weatherWidget)
@@ -299,6 +408,13 @@ class MyApp(QWidget):
     def generateMusicPlayerWidget(self):
         groupbox = self.musicPlayerModule.widget
         groupbox.setFixedWidth(190)
+        groupbox.setStyleSheet(widgetDefaultStyleSheet)
+
+        return groupbox
+
+    def generateSidebarWidget(self):
+        groupbox = self.sidebarModule.widget
+        groupbox.setFixedHeight(120)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
         return groupbox
@@ -486,6 +602,9 @@ class MyApp(QWidget):
         self.drawWindow()  # regenerate main layout and set widget layout as main layout
 
     @QtCore.pyqtSlot(dict)
+    def takeThreadAction(self, token):
+        self.takeAction(token)
+
     def takeAction(self, token):
         if token['type'] == 'set_location':
             changeSettings('lat', token['args'][0])
@@ -505,6 +624,13 @@ class MyApp(QWidget):
             changeSettings('refresh_term', token['args'][0])
             self.refresh()
 
+        elif token['type'] == 'music_autoplay':
+            if not self.musicPlayerModule.manager.isInvalid():
+                if not self.musicPlayerModule.manager.isStopped():
+                    self.musicPlayerModule.manager.pause()
+                else:
+                    self.musicPlayerModule.manager.play()
+
         elif token['type'] == 'play_music_by_keyword':
             if not self.musicPlayerModule.manager.isStopped():
                 self.musicPlayerModule.manager.pause()
@@ -512,6 +638,9 @@ class MyApp(QWidget):
             self.musicPlayerModule.manager.play()
             self.assistantMsgLabel.setText(token['args'][0])
         
+        elif token['type'] == 'assistant':
+            self.assistantThread.trigger()
+
         elif token['type'] == 'assistant_msg':
             self.assistantMsgLabel.setText(token['args'][0])
 
