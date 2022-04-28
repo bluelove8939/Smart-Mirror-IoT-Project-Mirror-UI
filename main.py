@@ -152,7 +152,7 @@ class MusicPlayerModule(object):
         
         self.title_widget = QLabel(music_title)
         self.title_widget.setStyleSheet(labelDefaultStyleSheet + 
-            'color: white; font-size: 11pt; font-weight: bold; border-style: none;')
+            'color: white; font-size: 10pt; font-weight: bold; border-style: none;')
         title_layout = QHBoxLayout()
         title_layout.addStretch(1)
         title_layout.addWidget(self.title_widget)
