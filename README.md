@@ -95,7 +95,7 @@ Run 'test/vlc_music_play_test.py' to check if there's no problem for running thi
     $ python ./test/vlc_music_play_test.py
 
 
-## Face emotion detection (testing)
+## Face emotion detection setup guide
 
 This feature is designed by codeveloper named 'freezinghands'.
 Note that codes listed below are originally written and licensed by him:
@@ -117,6 +117,6 @@ Note that the recent version of opencv may not campatible with some specific ver
 Make sure that your device has a compatible version of numpy.
 Also you this feature requires webcam to take picture of user's face.
 Before enabling this feature, you need to install webcam or raspberry pi camera module.
-If you already checked your device works fine, enable this feature simply by editing config.json just like below:
+If you already checked your device works fine, enable this feature simply by Eediting config.json just like below:
 
     "face-emotion-detection-enabled": true
