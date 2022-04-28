@@ -1,13 +1,11 @@
-from distutils.log import error
 import io
 import os
 import requests
 import json
-import pafy
-import vlc
 import os.path
 from gi.repository import GObject as gobject
 
+# Google OAuth2 requirements
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -15,9 +13,15 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
 
+# YouTube music player requirements
+import pafy
+import vlc
+
+# Bluetooth requirements (pybluez lib)
 import bluetooth
 
-from pushtotalk_modified import PLAYING  # pybluez library
+# Face emotion detection requirements
+import face_emotion_detection
 
 
 # Data Manager Init Listener
@@ -106,9 +110,10 @@ dataManagerInitListener.setInitialized('readDeviceConfig')
 
 applicationSettings = {}
 defaultApplicationSettings = {
-    'lat': 37.56779,  # latitude of Seoul, Korea
-    'lon': 126.97765,  # longitude of Seoul, Korea
-    'refresh_term': 30,  # refresh main widget after every 30 minutes
+    'lat': 37.56779,  # latitude (initialized as Seoul, Korea)
+    'lon': 126.97765,  # longitude (initialized as Seoul, Korea)
+    'refresh_term': 30,  # refresh term (initialized as 30 seconds)
+    'face_api_endpoint': 'my-endpoint',  # face api endpoint (initialized as 'my-endpoint')
 }
 
 with open('settings.json', 'rt') as settingsFile:
@@ -461,9 +466,15 @@ class AssistantManager:
 #   Plays a music from youtube metadata and vlc player
 
 cachesDirectoryPath = os.path.join(os.path.curdir, 'caches')
+faceEmotionDetectModule = None
 
 if "youtubeapikey" in apikeys.keys():
     pafy.set_api_key(apikeys["youtubeapikey"])
+
+if configurations['face-emotion-detection-enabled']:
+    face_emotion_detection.azure_api_wrapper.FACE_API_ENDPOINT = applicationSettings['face_api_endpoint']  # azure face api endpoint setup
+    face_emotion_detection.azure_api_wrapper.FACE_API_KEY = apikeys['azureface']  # azure face api key setup
+    faceEmotionDetectModule = face_emotion_detection.MirrorFaceDetect()
 
 def readYouTubeCaches():
     with open(os.path.join(cachesDirectoryPath, 'youtube_cache.json'), 'r') as cache:
@@ -531,9 +542,22 @@ class YouTubeMusicManager:
             print('Cannot find youtube caches')
 
         self.binded = []
+
+    def searchByEmotion(self):
+        if not configurations['face-emotion-detection-enabled']:
+            return
+        
+        emotion_result = faceEmotionDetectModule.detect_motion_webcam()
+        pref_result, max_value = None, 0
+
+        for key, value in emotion_result.items():
+            if value > max_value:
+                max_value = value
+                pref_result = key
+        
+        self.search(query=f"{pref_result} musics")
     
     def search(self, query=None, cnt=5, nextpage=False):
-        print(f'search by query: {query}')
         try:
             if not self.isStopped():
                 self.pause()
@@ -573,8 +597,6 @@ class YouTubeMusicManager:
 
             self.state.edit(YouTubeMusicManager.STOPPED)
             self._ready = False
-
-            print('search completed')
             
         except:
             print(f'An error occurred')

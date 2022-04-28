@@ -97,7 +97,12 @@ Run 'test/vlc_music_play_test.py' to check if there's no problem for running thi
 
 ## Face emotion detection (testing)
 
-This feature is originally designed by user named 'freezinghands'.
+This feature is designed by user named 'freezinghands'.
+Note that codes listed below are originally written and licensed by him:
+
+    face_emotion_detection.py
+    azure_api_wrapper.py
+
 You can access to the github repository of original face emotion detection project by the link below:
 
     https://github.com/freezinghands/face-analysis-webcam
@@ -114,4 +119,4 @@ Also you this feature requires webcam to take picture of user's face.
 Before enabling this feature, you need to install webcam or raspberry pi camera module.
 If you already checked your device works fine, enable this feature simply by editing config.json just like below:
 
-    "face-emotion-detection": true
+    "face-emotion-detection-enabled": true
