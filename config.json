@@ -1,5 +1,6 @@
 {
     "google-drive-enabled": true,
     "google-assistant-enabled": true,
-    "youtube-music-enabled": true
+    "youtube-music-enabled": true,
+    "face-emotion-detection": true
 }

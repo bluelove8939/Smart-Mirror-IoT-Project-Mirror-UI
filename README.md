@@ -30,6 +30,7 @@ These are the keys required.
     google client file name
     google assistant client file name
     youtube api key
+    azure face api key
 
 Make 'assets/keys' directory to your repository and put your key and secret files to the directory.
 And make 'apikeys.json' inside the directory with the given format below.
@@ -39,6 +40,7 @@ And make 'apikeys.json' inside the directory with the given format below.
         "googleclientfilename": "<your google client file name>",
         "googleassistantclientfilename": "<your google assistant client file name>",
         "youtubeapikey": "<your youtube api key>"
+        "azureface": "<your azure face api key>"
     }
 
 Now your device is ready to run this project. Run 'main.py'.
@@ -61,7 +63,7 @@ If there's any problem, see the website below and follow the instruction.
 
 And then enable Google Assistant simply by editing config.json just like below:
 
-    "google-assistant-enabled": false
+    "google-assistant-enabled": true
 
 There can be deprecated method inside Google Assistant SDK.
 For example, 'array.array.tostring()' is deprecated in python3.9 (audio_helpers.py).
@@ -72,7 +74,7 @@ Modified pushtotalk.py is provided within this project.
 Note that this modified pushtotalk.py is licenced by Google and cannot be used for commercial purpose.
 
 
-## YouTube Music setup guide (testing)
+## YouTube Music setup guide
 
 You can add YouTube music player to your smart mirror.
 Make sure you already have your speaker attatched to raspberry pi4 before starting with this guide.
@@ -91,3 +93,25 @@ So you need comment the line 54 of 'backend_youtube_dl.py' inside pafy library.
 Run 'test/vlc_music_play_test.py' to check if there's no problem for running this project.
 
     $ python ./test/vlc_music_play_test.py
+
+
+## Face emotion detection (testing)
+
+This feature is originally designed by user named 'freezinghands'.
+You can access to the github repository of original face emotion detection project by the link below:
+
+    https://github.com/freezinghands/face-analysis-webcam
+
+You need to run setup code before enabling this feature.
+Run the code below:
+
+    $ bash raspberrypi-face-setup.sh
+
+And then check whether all of the packages are installed properly.
+Note that the recent version of opencv may not campatible with some specific version of numpy.
+Make sure that your device has a compatible version of numpy.
+Also you this feature requires webcam to take picture of user's face.
+Before enabling this feature, you need to install webcam or raspberry pi camera module.
+If you already checked your device works fine, enable this feature simply by editing config.json just like below:
+
+    "face-emotion-detection": true
