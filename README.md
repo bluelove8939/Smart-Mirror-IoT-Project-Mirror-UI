@@ -97,7 +97,7 @@ Run 'test/vlc_music_play_test.py' to check if there's no problem for running thi
 
 ## Face emotion detection (testing)
 
-This feature is designed by user named 'freezinghands'.
+This feature is designed by codeveloper named 'freezinghands'.
 Note that codes listed below are originally written and licensed by him:
 
     face_emotion_detection.py
