@@ -129,7 +129,7 @@ This feature is designed by codeveloper named 'kimBoeGeun'.
 Note that codes listed below are originally written and licensed by him:
 
     moisture_driver.py
-    hardware_manger.py
+    hardware_manger.py (MoistureManager)
 
 You can access to the github repository of original face emotion detection project by the link below:
 
