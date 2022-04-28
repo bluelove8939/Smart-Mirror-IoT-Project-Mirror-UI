@@ -523,6 +523,7 @@ class YouTubeMusicManager:
         self.nextPageToken = None
         self.instance = vlc.Instance()
         self.player = self.instance.media_player_new()
+        self.player.audio_set_volume(100)
         self.events = self.player.event_manager()
         self.state = StateListner(YouTubeMusicManager.INVALID)
         
@@ -705,6 +706,12 @@ class YouTubeMusicManager:
 
     def isInvalid(self):
         return self.state == YouTubeMusicManager.INVALID
+
+    def volumnUp(self):
+        self.player.audio_set_volume(100)
+    
+    def volumeDown(self):
+        self.player.audio_set_volume(30)
 
 
 # # Testbench code for bluetooth connection (RFCOMM)

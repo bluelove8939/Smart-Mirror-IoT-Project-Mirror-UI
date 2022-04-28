@@ -21,7 +21,7 @@ from data_manager import dataManagerInitListener
 from data_manager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager
 from data_manager import changeSettings, saveSettings, getSettings, weekDay, lastDay
 
-from hardware_manager import MoistureManager
+from hardware_manager import MoistureManager, AudioManager
 
 
 # Widget styles
@@ -38,6 +38,7 @@ button_next = os.path.join(imgdir, 'next.PNG')
 button_prev = os.path.join(imgdir, 'prev.PNG')
 button_opening = os.path.join(imgdir, 'opening.PNG')
 
+# Sidebar icons
 sidebar_imgdir = os.path.join(imgdir, 'sidebar_icons')
 sidebar_assistant = os.path.join(sidebar_imgdir, 'sidebar_assistant.PNG')
 sidebar_back = os.path.join(sidebar_imgdir, 'sidebar_back.PNG')
@@ -47,6 +48,12 @@ sidebar_play = os.path.join(sidebar_imgdir, 'sidebar_play.PNG')
 sidebar_refresh = os.path.join(sidebar_imgdir, 'sidebar_refresh.PNG')
 sidebar_select = os.path.join(sidebar_imgdir, 'sidebar_select.PNG')
 sidebar_water = os.path.join(sidebar_imgdir, 'sidebar_water.PNG')
+sidebar_music = os.path.join(sidebar_imgdir, 'sidebar_music.PNG')
+sidebar_next = os.path.join(sidebar_imgdir, 'sidebar_next.PNG')
+sidebar_prev = os.path.join(sidebar_imgdir, 'sidebar_prev.PNG')
+sidebar_settings = os.path.join(sidebar_imgdir, 'sidebar_settings.PNG')
+sidebar_volumn_up = os.path.join(sidebar_imgdir, 'sidebar_volumn_up.PNG')
+sidebar_volumn_down = os.path.join(sidebar_imgdir, 'sidebar_volumn_down.PNG')
 
 
 # Google Assistant thread
@@ -223,14 +230,13 @@ class SidebarActionToken:
 class SidebarModule:
     MODE_MAIN = 0
     MODE_SELECT = 1
-    MODE_SKIN = 2   # Skin condition mode (BIA sensor)
-    MODE_SOUND = 3  # Music recommendation mode (face and emotion detection)
-    MODE_STYLE = 4  # Style codinator mode (reverse image API)
+    MODE_MUSIC = 2
+    MODE_SETTINGS = 3
 
     configs = {
         MODE_MAIN: [
-            SidebarConfig(name=0, icon_url=sidebar_refresh, action_token=SidebarActionToken('refresh')),
-            SidebarConfig(name=1, icon_url=sidebar_play, action_token=SidebarActionToken('music_autoplay')),
+            SidebarConfig(name=0, icon_url=sidebar_settings, action_token=SidebarActionToken('settings')),
+            SidebarConfig(name=1, icon_url=sidebar_music, action_token=SidebarActionToken('music')),
             SidebarConfig(name=2, icon_url=sidebar_assistant, action_token=SidebarActionToken('assistant')),
             SidebarConfig(name=3, icon_url=sidebar_select, action_token=SidebarActionToken('select')),
         ],
@@ -238,6 +244,18 @@ class SidebarModule:
             SidebarConfig(name=0, icon_url=sidebar_expression, action_token=SidebarActionToken('play_music_by_emotion')),
             SidebarConfig(name=1, icon_url=sidebar_water, action_token=SidebarActionToken('moisture')),
             SidebarConfig(name=2, icon_url=sidebar_cloth, action_token=SidebarActionToken('style')),
+            SidebarConfig(name=3, icon_url=sidebar_back, action_token=SidebarActionToken('back')),
+        ],
+        MODE_MUSIC: [
+            SidebarConfig(name=0, icon_url=sidebar_play, action_token=SidebarActionToken('music_autoplay')),
+            SidebarConfig(name=1, icon_url=sidebar_next, action_token=SidebarActionToken('music_next')),
+            SidebarConfig(name=2, icon_url=sidebar_prev, action_token=SidebarActionToken('music_prev')),
+            SidebarConfig(name=3, icon_url=sidebar_back, action_token=SidebarActionToken('back')),
+        ],
+        MODE_SETTINGS: [
+            SidebarConfig(name=0, icon_url=sidebar_refresh, action_token=SidebarActionToken('refresh')),
+            SidebarConfig(name=1, icon_url=sidebar_volumn_up, action_token=SidebarActionToken('master_volumn_up')),
+            SidebarConfig(name=2, icon_url=sidebar_volumn_down, action_token=SidebarActionToken('master_volumn_down')),
             SidebarConfig(name=3, icon_url=sidebar_back, action_token=SidebarActionToken('back')),
         ],
     }
@@ -285,6 +303,10 @@ class SidebarModule:
             self.changeMode(SidebarModule.MODE_SELECT)
         elif targetToken.name == 'back':
             self.changeMode(SidebarModule.MODE_MAIN)
+        elif targetToken.name == 'music':
+            self.changeMode(SidebarModule.MODE_MUSIC)
+        elif targetToken.name == 'settings':
+            self.changeMode(SidebarModule.MODE_SETTINGS)
 
         self.parent.takeAction(token={
             'type': targetToken.name,
@@ -333,6 +355,7 @@ class MyApp(QWidget):
         self.musicPlayerModule = MusicPlayerModule()
         self.sidebarModule = SidebarModule(parent=self)
         self.moistureModule = MoistureManager()
+        self.audioModule = AudioManager()
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
@@ -657,6 +680,14 @@ class MyApp(QWidget):
                     self.musicPlayerModule.manager.pause()
                 else:
                     self.musicPlayerModule.manager.play()
+        
+        elif token['type'] == 'music_next':
+            if not self.musicPlayerModule.manager.isInvalid():
+                self.musicPlayerModule.manager.moveNext()
+        
+        elif token['type'] == 'music_prev':
+            if not self.musicPlayerModule.manager.isInvalid():
+                self.musicPlayerModule.manager.movePrev()
 
         elif token['type'] == 'play_music_by_keyword':
             if not self.musicPlayerModule.manager.isStopped():
@@ -694,6 +725,18 @@ class MyApp(QWidget):
 
         elif token['type'] == 'assistant_msg':
             self.assistantMsgLabel.setText(token['args'][0])
+
+        elif token['type'] == 'master_volumn_up':
+            self.audioModule.volumnUp()
+
+        elif token['type'] == 'master_volumn_down':
+            self.audioModule.volumnDown()
+
+        elif token['type'] == 'vlc_volumn_up':
+            self.musicPlayerModule.manager.volumnUp()
+
+        elif token['type'] == 'vlc_volumn_down':
+            self.musicPlayerModule.manager.volumeDown()
 
 
 if __name__ == '__main__':

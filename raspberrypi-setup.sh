@@ -15,3 +15,6 @@ sudo pip install --upgrade pybluez  # python bluetooth extension
 
 # String parse lib
 sudo pip3 install --upgrade parse
+
+# Alsa audio controller lib
+sudo pip3 install --upgrade pyalsaaudio

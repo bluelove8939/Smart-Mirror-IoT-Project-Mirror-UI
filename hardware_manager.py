@@ -4,6 +4,9 @@ import time
 # I2C driver
 import moisture_driver
 
+# Alsa audio mixer
+import alsaaudio
+
 
 # Moisture manager
 # 
@@ -61,6 +64,21 @@ class MoistureManager:
 class ButtonManager:
     def __init__(self):
         pass
+
+
+class AudioManager:
+    def __init__(self) -> None:
+        self.mixer = alsaaudio.Mixer()
+        self.mixer.setvolume(70)
+        self.current_volume = self.mixer.getvolume()
+
+    def volumnUp(self):
+        self.mixer.setvolume(int(self.current_volume[0]) + 10)
+        self.current_volume = self.mixer.getvolume()
+
+    def volumnDown(self):
+        self.mixer.setvolume(int(self.current_volume[0]) - 10)
+        self.current_volume = self.mixer.getvolume()
 
 
 # Testbench code for moisture manager
