@@ -99,16 +99,16 @@ predefined_tokens = {
     '{}음악재생해줘': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
 
     # Play music by face emotion detection
-    '표정인식해서음악틀어': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
-    '표정인식해서노래틀어': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
-    '표정인식해서음악틀어줘': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
-    '표정인식해서노래틀어줘': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
-    '표정인식해서음악재생': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
-    '표정인식해서노래재생': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
-    '표정인식해서음악재생해': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
-    '표정인식해서노래재생해': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
-    '표정인식해서음악재생해줘': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
-    '표정인식해서노래재생해줘': ActionToken(name='expression', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서음악틀어': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서노래틀어': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서음악틀어줘': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서노래틀어줘': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서음악재생': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서노래재생': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서음악재생해': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서노래재생해': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서음악재생해줘': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
+    '표정인식해서노래재생해줘': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
 }
 
 def get_predefined_token(targetString):
