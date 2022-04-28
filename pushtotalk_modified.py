@@ -185,7 +185,7 @@ class SampleAssistant(object):
             for c in self.gen_assist_requests():
                 assistant_helpers.log_assist_request_without_audio(c)
                 yield c
-            logging.debug('Reached end of AssistRequest iteration.')
+            logging.debug('[ASSISTANT] Reached end of AssistRequest iteration.')
 
         # This generator yields AssistResponse proto messages
         # received from the gRPC Google Assistant API.
@@ -193,11 +193,11 @@ class SampleAssistant(object):
                                           self.deadline):
             assistant_helpers.log_assist_response_without_audio(resp)
             if resp.event_type == END_OF_UTTERANCE:
-                logging.info('End of audio request detected.')
-                logging.info('Stopping recording.')
+                logging.info('[ASSISTANT] End of audio request detected.')
+                logging.info('[ASSISTANT] Stopping recording.')
                 self.conversation_stream.stop_recording()
             if resp.speech_results:
-                logging.info('Transcript of user request: "%s".', ' '.join(r.transcript 
+                logging.info('[ASSISTANT] Transcript of user request: "%s".', ' '.join(r.transcript 
                     for r in resp.speech_results))
                 
                 # Send transcript data instantly to the external listener
@@ -221,7 +221,7 @@ class SampleAssistant(object):
                     # If predefined action token is generated, do not play the system response
                     if play_system_response:
                         self.conversation_stream.start_playback()  
-                        logging.info('Playing assistant response.')
+                        logging.info('[ASSISTANT] Playing assistant response.')
                     # END
                     
                 # If predefined action token is generated, do not write output audio data to conversation
@@ -230,15 +230,15 @@ class SampleAssistant(object):
                 # END
             if resp.dialog_state_out.conversation_state:
                 conversation_state = resp.dialog_state_out.conversation_state
-                logging.debug('Updating conversation state.')
+                logging.debug('[ASSISTANT] Updating conversation state.')
                 self.conversation_state = conversation_state
             if resp.dialog_state_out.volume_percentage != 0:
                 volume_percentage = resp.dialog_state_out.volume_percentage
-                logging.info('Setting volume to %s%%', volume_percentage)
+                logging.info('[ASSISTANT] Setting volume to %s%%', volume_percentage)
                 self.conversation_stream.volume_percentage = volume_percentage
             if resp.dialog_state_out.microphone_mode == DIALOG_FOLLOW_ON:
                 continue_conversation = True
-                logging.info('Expecting follow-on query from user.')
+                logging.info('[ASSISTANT] Expecting follow-on query from user.')
             elif resp.dialog_state_out.microphone_mode == CLOSE_MICROPHONE:
                 continue_conversation = False
             if resp.device_action.device_request_json:
@@ -253,11 +253,11 @@ class SampleAssistant(object):
                 system_browser.display(resp.screen_out.data)
 
         if len(device_actions_futures):
-            logging.info('Waiting for device executions to complete.')
+            logging.info('[ASSISTANT] Waiting for device executions to complete.')
             concurrent.futures.wait(device_actions_futures)
         
         # If predefined action token is generated, do not play the system response
-        logging.info('Finished playing assistant response.')
+        logging.info('[ASSISTANT] Finished playing assistant response.')
         self.conversation_stream.stop_playback()
         # END
         return continue_conversation
@@ -392,7 +392,7 @@ def main(api_endpoint, credentials, project_id,
         $ python -m googlesamples.assistant -i <input file> -o <output file>
     """
     # Setup logging.
-    logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
+    # logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
 
     # Load OAuth 2.0 credentials.
     try:
@@ -411,7 +411,7 @@ def main(api_endpoint, credentials, project_id,
     # Create an authorized gRPC channel.
     grpc_channel = google.auth.transport.grpc.secure_authorized_channel(
         credentials, http_request, api_endpoint)
-    logging.info('Connecting to %s', api_endpoint)
+    logging.info('[ASSISTANT] Connecting to %s', api_endpoint)
 
     # Configure audio source and sink.
     audio_device = None
@@ -459,18 +459,18 @@ def main(api_endpoint, credentials, project_id,
                 device = json.load(f)
                 device_id = device['id']
                 device_model_id = device['model_id']
-                logging.info("Using device model %s and device id %s",
+                logging.info("[ASSISTANT] Using device model %s and device id %s",
                              device_model_id,
                              device_id)
         except Exception as e:
-            logging.warning('Device config not found: %s' % e)
-            logging.info('Registering device')
+            logging.warning('[ASSISTANT] Device config not found: %s' % e)
+            logging.info('[ASSISTANT] Registering device')
             if not device_model_id:
-                logging.error('Option --device-model-id required '
+                logging.error('[ASSISTANT] Option --device-model-id required '
                               'when registering a device instance.')
                 sys.exit(-1)
             if not project_id:
-                logging.error('Option --project-id required '
+                logging.error('[ASSISTANT] Option --project-id required '
                               'when registering a device instance.')
                 sys.exit(-1)
             device_base_url = (
@@ -488,9 +488,9 @@ def main(api_endpoint, credentials, project_id,
             )
             r = session.post(device_base_url, data=json.dumps(payload))
             if r.status_code != 200:
-                logging.error('Failed to register device: %s', r.text)
+                logging.error('[ASSISTANT] Failed to register device: %s', r.text)
                 sys.exit(-1)
-            logging.info('Device registered: %s', device_id)
+            logging.info('[ASSISTANT] Device registered: %s', device_id)
             pathlib.Path(os.path.dirname(device_config)).mkdir(exist_ok=True)
             with open(device_config, 'w') as f:
                 json.dump(payload, f)

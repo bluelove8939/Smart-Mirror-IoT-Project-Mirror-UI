@@ -19,6 +19,7 @@ import cv2
 
 FACE_API_ENDPOINT = 'my-endpoint'
 FACE_API_KEY = None
+NO_EXCEPTION_MSG = 'NO EXCEPTION'
 
 
 # Azure Face API
@@ -34,11 +35,13 @@ class AzureFaceApi:
     def __init__(self, apikey=FACE_API_KEY):
         self.endpoint = 'https://' + FACE_API_ENDPOINT + '.cognitiveservices.azure.com/'
         self.apikey = apikey
-        self.face_client = FaceClient(self.endpoint, CognitiveServicesCredentials(self.apikey))
+        self.face_client = None
 
     def detect_face_src(self, image_path):
         if self.apikey is None:
             raise Exception('FACE_API_KEY required: initialize FACE_API_KEY variable')
+        if self.face_client is None:
+            self.face_client = FaceClient(self.endpoint, CognitiveServicesCredentials(self.apikey))
 
         # initialize variable in Json format, to return exception string
         j = json.loads('{}')
@@ -70,7 +73,7 @@ class AzureFaceApi:
         ret = {}
 
         # added phrase that stances no exceptions..
-        ret['exception']    = 'null'
+        ret['exception']    = NO_EXCEPTION_MSG
         ret['anger']        = detected_faces[0].face_attributes.emotion.anger
         ret['contempt']     = detected_faces[0].face_attributes.emotion.contempt
         ret['disgust']      = detected_faces[0].face_attributes.emotion.disgust

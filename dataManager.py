@@ -3,6 +3,7 @@ import os
 import requests
 import json
 import os.path
+import logging
 from gi.repository import GObject as gobject
 
 # Google OAuth2 requirements
@@ -90,6 +91,8 @@ configurations = {
     "google-drive-enabled": False,
     "google-assistant-enabled": False,
     "youtube-music-enabled": False,
+    "face-emotion-detection-enabled": False,
+    "device-logging-option": "INFO",
 }
 
 try:
@@ -99,6 +102,11 @@ try:
             configurations[k] = v
 except:
     print('config.json not found')
+
+if configurations['device-logging-option'] == "INFO":
+    logging.basicConfig(level=logging.INFO)
+elif configurations['device-logging-option'] == "DEBUG":
+    logging.basicConfig(level=logging.DEBUG)
 
 dataManagerInitListener.setInitialized('readDeviceConfig')
 
@@ -222,7 +230,7 @@ class WeatherDownloader:
             ret = json.loads(response.text)
             return ret
         else:
-            assert "HTTP request error occurred"
+            logging.error("[WEATHER DOWNLOADER] HTTP request error occurred") 
 
     def downloadWeatherIcon(self, iconId):  # download icon image from openweathermap api by using iconID
         iconURL = f"http://openweathermap.org/img/wn/{iconId}@2x.png"
@@ -230,7 +238,7 @@ class WeatherDownloader:
         if response.status_code == 200:
             return response.content  # return image itself
         else:
-            assert "HTTP request error occurred"
+            logging.error("[WEATHER DOWNLOADER] HTTP request error occurred") 
 
 
 # Schedule data downloader
@@ -302,7 +310,7 @@ class ScheduleDownloader:
             return parsed
 
         except HttpError as error:
-            print(f'An error occurred: {error}')
+            logging.error("[SCHEDULE DOWNLOADER] HTTP request error occurred") 
 
 
 # Bluetooth controlller
@@ -333,9 +341,9 @@ class BluetoothController:
         self.client_info = None
 
     def connect(self):
-        print(f'Waiting for connection: channel {self.port}')
+        logging.info(f"[BLUETOOTH] Waiting for bluetooth connection: channel {self.port}") 
         self.client_sock, self.client_info = self.server_sock.accept()
-        print(f'Client accepted: {self.client_info}')
+        logging.info(f'[BLUETOOTH] Client accepted: {self.client_info}')
 
     
     def receive(self):
@@ -345,7 +353,7 @@ class BluetoothController:
             return decodedData
         
         except IOError or KeyboardInterrupt:
-            print('Client disconnected')
+            logging.info('[BLUETOOTH] Client disconnected')
             self.client_sock.close()
             return None
     
@@ -356,7 +364,7 @@ class BluetoothController:
             print(data)
 
         except IOError or KeyboardInterrupt:
-            print('Client disconnected')
+            logging.info('[BLUETOOTH] Client disconnected')
             self.client_sock.close()
             return None
 
@@ -548,6 +556,12 @@ class YouTubeMusicManager:
             return
         
         emotion_result = faceEmotionDetectModule.detect_motion_webcam()
+
+        if emotion_result['exception'] != face_emotion_detection.azure_api_wrapper.NO_EXCEPTION_MSG:
+            logging.error('[YOUTUBE MUSIC] Exception occurred on detecting face emotion')
+            logging.error(f"[FACE EMOTION] {emotion_result['exception']}")
+            return
+
         pref_result, max_value = None, 0
 
         for key, value in emotion_result.items():
@@ -566,7 +580,8 @@ class YouTubeMusicManager:
             if query is None and self.current_query is not None:
                 query = self.current_query
             elif query is None and self.current_query is None:
-                raise Exception('YouTube music manager error: query required')
+                logging.warning('[YOUTUBE MUSIC] Search warning: query required')
+                raise Exception()
 
             # Send request
             if nextpage and self.nextPageToken is not None:
@@ -599,7 +614,7 @@ class YouTubeMusicManager:
             self._ready = False
             
         except:
-            print(f'An error occurred')
+            logging.error(f'[YOUTUBE MUSIC] Error occurred on searching with query: {query}')
     
     def setPlayer(self, videoId):
         self.state.edit(YouTubeMusicManager.LOADING)
@@ -662,7 +677,7 @@ class YouTubeMusicManager:
             self.player.play()
             self.state.edit(YouTubeMusicManager.PLAYING)
         except:
-            print('Skipped because an error occurred')
+            logging.info('[YOUTUBE MUSIC] Skipped because an error occurred on playing music')
             self.moveNext()
             self.play()
 
