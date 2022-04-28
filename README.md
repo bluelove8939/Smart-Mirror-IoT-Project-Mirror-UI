@@ -39,8 +39,9 @@ And make 'apikeys.json' inside the directory with the given format below.
         "openweathermap": "<your openweathermap key>",
         "googleclientfilename": "<your google client file name>",
         "googleassistantclientfilename": "<your google assistant client file name>",
-        "youtubeapikey": "<your youtube api key>"
-        "azureface": "<your azure face api key>"
+        "youtubeapikey": "<your youtube api key>",
+        "azureface": "<your azure face api key>",
+        "azureface-endpoint": "<your azure face api endpoint>"
     }
 
 Now your device is ready to run this project. Run 'main.py'.
