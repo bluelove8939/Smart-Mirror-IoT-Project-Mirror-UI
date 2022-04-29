@@ -100,8 +100,8 @@ try:
         content = json.loads(config.read())
         for k, v in content.items():
             configurations[k] = v
-except:
-    print('config.json not found')
+except Exception as error:
+    logging.warning(f'[DATA MANAGER] config.json not found: {error}')
 
 if configurations['device-logging-option'] == "INFO":
     logging.basicConfig(level=logging.INFO)
@@ -178,7 +178,7 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath):
 # User account authentication process
 google_scope = []
 if configurations['google-drive-enabled']:
-    google_scope.append('https://www.googleapis.com/auth/drive.readonly')
+    google_scope.append('https://www.googleapis.com/auth/drive.file')
 if configurations['youtube-music-enabled']:
     google_scope.append('https://www.googleapis.com/auth/youtube.readonly')
 
@@ -190,7 +190,8 @@ if len(google_scope) != 0:
 
     # Generate login token via web browser
     tokenpath = os.path.join('assets', 'user_account_tokens', 'token.json')
-    creds = makeCredentialFromClientfile(googleclientIDfilename, google_scope, tokenpath)
+    clientSecretPath = os.path.join(os.path.abspath(os.curdir), 'assets', 'keys', googleclientIDfilename)
+    creds = makeCredentialFromClientfile(clientSecretPath, google_scope, tokenpath)
 
 dataManagerInitListener.setInitialized('googleAccountAuth')
 
@@ -198,7 +199,7 @@ dataManagerInitListener.setInitialized('googleAccountAuth')
 if configurations['google-assistant-enabled']:
     # Get authentication via browser if there's no credential file
     credpath = os.path.join(os.path.expanduser('~'), '.config', 'google-oauthlib-tool', 'credentials.json')
-    clientSecretPath = os.path.join('assets', 'keys', apikeys['googleassistantclientfilename'])
+    clientSecretPath = os.path.join(os.path.abspath(os.curdir), 'assets', 'keys', apikeys['googleassistantclientfilename'])
     assistant_scope = ['https://www.googleapis.com/auth/assistant-sdk-prototype']
     assistant_creds = makeCredentialFromClientfile(clientSecretPath, assistant_scope, credpath)
 
@@ -544,8 +545,8 @@ class YouTubeMusicManager:
             self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
             self._ready = True
             self.state.edit(YouTubeMusicManager.STOPPED)
-        except:
-            print('Cannot find youtube caches')
+        except Exception as error:
+            logging.warning(f'[YOUTUBE MUSIC] Cannot find youtube caches {error}')
 
         self.binded = []
 
@@ -616,8 +617,8 @@ class YouTubeMusicManager:
             self.state.edit(YouTubeMusicManager.STOPPED)
             self._ready = False
             
-        except:
-            logging.error(f'[YOUTUBE MUSIC] Error occurred on searching with query: {query}')
+        except Exception as error:
+            logging.error(f'[YOUTUBE MUSIC] Error occurred on searching with query({query}): {error}')
     
     def setPlayer(self, videoId):
         self.state.edit(YouTubeMusicManager.LOADING)
@@ -644,8 +645,12 @@ class YouTubeMusicManager:
         try:
             self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
             self.player.play()
+            if self.player.get_state() == vlc.State.Error:
+                logging.error('[YOUTUBE MUSIC] Error ocurred on playing music')
+                raise Exception()
             self.state.edit(YouTubeMusicManager.PLAYING)
-        except:
+        except Exception as error:
+            logging.info(f'[YOUTUBE MUSIC] Skip next')
             self.moveNext()
 
     def movePrev(self):
@@ -658,8 +663,12 @@ class YouTubeMusicManager:
         try:
             self.setPlayer(self.current_playlist[self.current_index]['id']['videoId'])
             self.player.play()
+            if self.player.get_state() == vlc.State.Error:
+                logging.error('[YOUTUBE MUSIC] Error ocurred on playing music')
+                raise Exception()
             self.state.edit(YouTubeMusicManager.PLAYING)
-        except:
+        except Exception as error:
+            logging.info(f'[YOUTUBE MUSIC] Skip prev')
             self.movePrev()
     
     @vlc.callbackmethod
@@ -682,8 +691,8 @@ class YouTubeMusicManager:
                 logging.error('[YOUTUBE MUSIC] Error ocurred on playing music')
                 raise Exception()
             self.state.edit(YouTubeMusicManager.PLAYING)
-        except:
-            logging.info('[YOUTUBE MUSIC] Skipped because an error occurred on playing music')
+        except Exception as error:
+            logging.info(f'[YOUTUBE MUSIC] Skipped because an error occurred on playing music: {error}')
             self.moveNext()
             self.play()
 
