@@ -1,9 +1,11 @@
+import chunk
 import io
 import os
 import requests
 import json
 import os.path
 import logging
+import datetime
 from gi.repository import GObject as gobject
 
 # Google OAuth2 requirements
@@ -11,7 +13,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from googleapiclient.errors import HttpError
 
 # YouTube music player requirements
@@ -230,7 +232,7 @@ class WeatherDownloader:
             ret = json.loads(response.text)
             return ret
         else:
-            logging.error("[WEATHER DOWNLOADER] HTTP request error occurred") 
+            logging.error("[WEATHER DOWNLOADER] HTTP request error ocurred") 
 
     def downloadWeatherIcon(self, iconId):  # download icon image from openweathermap api by using iconID
         iconURL = f"http://openweathermap.org/img/wn/{iconId}@2x.png"
@@ -238,18 +240,29 @@ class WeatherDownloader:
         if response.status_code == 200:
             return response.content  # return image itself
         else:
-            logging.error("[WEATHER DOWNLOADER] HTTP request error occurred") 
+            logging.error("[WEATHER DOWNLOADER] HTTP request error ocurred") 
 
 
-# Schedule data downloader
-#
-# Note:
+# Google drive manager modules
+# 
+# [1] ScheduleDownloader
+# 
+# Description:
 #   Module for downloading scheudle data from user's private google drive storage
 #   Download schedule data via Google Drive API (v3)
+#   API link: https://developers.google.com/drive/api/v3/about-files
+# 
+# [2] SkinConditionUploader
+# 
+# Description:
+#   Module for uploading skin condition data to user's private google drive storage
+#   Upload skin condition data via Foofle Drive API (v3)
 #   API link: https://developers.google.com/drive/api/v3/about-files
 
 rootDirName = 'Ice Cream Hub'
 scheduleDirName = 'Schedules'
+skinConditionDirName = 'Skin Conditions'
+skinConditionFileName = 'skinconditions.json'
 driveFolderType = 'application/vnd.google-apps.folder'
 driveTextFileType = 'text/plain'
 
@@ -299,7 +312,7 @@ class ScheduleDownloader:
             done = False
             while done is False:
                 status, done = downloader.next_chunk()
-                print("Download %d%%." % int(status.progress() * 100))
+                logging.info("[SCHEDULE DOWNLOADER] Download %d%%." % int(status.progress() * 100))
 
             # Parse downloaded content and return the data
             content = str(fh.getvalue(), 'utf-8')
@@ -309,8 +322,114 @@ class ScheduleDownloader:
 
             return parsed
 
-        except HttpError as error:
-            logging.error("[SCHEDULE DOWNLOADER] HTTP request error occurred") 
+        except Exception or HttpError as error:
+            logging.error("[SCHEDULE DOWNLOADER] HTTP request error ocurred") 
+
+class SkinConditionUploader:
+    def __init__(self):
+        global creds
+        self.creds = creds
+
+    def upload(self, targetData, targetDate):
+        try:
+            service = build('drive', 'v3', credentials=self.creds)
+
+            # Find out application root folder ID
+            results = service.files().list(
+                q=f"mimeType = '{driveFolderType}' and name = '{rootDirName}' and trashed = false",
+                spaces='drive',
+                fields='nextPageToken, files(id, name)').execute()
+            items = results.get('files', [])
+            if not items:  # If there's no root dir, then generate new one
+                rootDirFile = service.files().create(body={
+                    'name': rootDirName,
+                    'mimeType': driveFolderType,
+                }, fields='id').execute()
+                rootDirID = rootDirFile.get('id')
+            else:
+                rootDirID = items[0]['id']
+
+            # Find out skin condition folder
+            results = service.files().list(
+                q=f"mimeType = '{driveFolderType}' and name = '{skinConditionDirName}' and trashed = false and '{rootDirID}' in parents",
+                spaces='drive',
+                fields='nextPageToken, files(id, name)').execute()
+            items = results.get('files', [])
+            if not items:  # If there's no skin condition dir, then generate new one
+                skinConditionDirFile = service.files().create(body={
+                    'name': skinConditionDirName,
+                    'mimeType': driveFolderType,
+                    'parents': [rootDirID]
+                }, fields='id').execute()
+                skinConditionDirID = skinConditionDirFile.get('id')
+            else:
+                skinConditionDirID = items[0]['id']
+
+            # Find out target file ID
+            results = service.files().list(
+                q=f"name = '{skinConditionFileName}' and trashed = false and '{skinConditionDirID}' in parents",
+                spaces='drive',
+                fields='nextPageToken, files(id, name)').execute()
+            items = results.get('files', [])
+            if not items:  # If there's no target file, then generate new one
+                targetFile = service.files().create(body={
+                    'name': skinConditionFileName,
+                    'mimeType': driveTextFileType,
+                    'parents': [skinConditionDirID]
+                }, fields='id').execute()
+                targetFileID = targetFile.get('id')
+            else:
+                targetFileID = items[0]['id']
+
+            # Download saved data and update
+            request = service.files().get_media(fileId=targetFileID)
+            fh = io.BytesIO()
+            downloader = MediaIoBaseDownload(fh, request)
+            done = False
+            while done is False:
+                status, done = downloader.next_chunk()
+                logging.info("[SKIN DATA UPLOADER] (current data) Download %d%%." % int(status.progress() * 100))
+
+            content = str(fh.getvalue(), 'utf-8')
+            if content:
+                parsed = json.loads(content)
+            else:
+                parsed = {}
+
+            if isinstance(targetDate, str):
+                targetDate = datetime.date.fromisoformat(targetDate)
+
+            for key in parsed.keys():
+                date_key = datetime.date.fromisoformat(key)
+                if targetDate - date_key > datetime.timedelta(30):  # if saved data is expired, delete data
+                    del parsed[key]
+            
+            if targetDate.isoformat() in parsed.keys():
+                if len(parsed[targetDate.isoformat()]) >= 10:
+                    del parsed[targetDate.isoformat()][0]
+                parsed[targetDate.isoformat()].append(targetData)
+            else:
+                parsed[targetDate.isoformat()] = [targetData]
+
+            content = json.dumps(parsed)  # updated content
+
+            # Upload updated content
+            content_stream = io.BytesIO(bytes(content, 'utf-8'))
+            uploader = MediaIoBaseUpload(content_stream, mimetype=driveTextFileType)
+            updated_targetFile = service.files().update(fileId=targetFileID, body={
+                'name': skinConditionFileName,
+                'mimeType': driveTextFileType,
+            }, media_body=uploader, fields='id').execute()
+
+            if not updated_targetFile.get('id'):
+                raise Exception('Updated target file id is not identified')
+
+            return True
+
+        except Exception or HttpError as error:
+            logging.error(f"[SKIN CONDITION UPLOADER] HTTP request error ocurred: {error}")
+        
+        return False
 
 
 # Bluetooth controlller
@@ -746,7 +865,7 @@ class YouTubeMusicManager:
 #     manager.activate(testCallbackFunc)
 
 
-# Testbench code for youtube music manager
+# # Testbench code for youtube music manager
 # if __name__ == '__main__':
 #     import time
 #
@@ -768,7 +887,13 @@ class YouTubeMusicManager:
 #             manager.play()
 
 
-# Testbench code for face emotion detection
-if __name__ == '__main__':
-    face_emotion_module = face_emotion_detection.MirrorFaceDetect(apikeys['azureface'], apikeys['azureface-endpoint'])
-    print(face_emotion_module.detect_motion_webcam())
+# # Testbench code for face emotion detection
+# if __name__ == '__main__':
+#     face_emotion_module = face_emotion_detection.MirrorFaceDetect(apikeys['azureface'], apikeys['azureface-endpoint'])
+#     print(face_emotion_module.detect_motion_webcam())
+
+
+# Testbench code for skin condition uploader
+if __name__ == "__main__":
+    manager = SkinConditionUploader()
+    manager.upload(30, datetime.date.today().isoformat())

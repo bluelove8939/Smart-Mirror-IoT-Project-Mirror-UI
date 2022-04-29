@@ -1,7 +1,7 @@
 import os
 import sys
-import time
 import functools
+import datetime
 
 from PyQt5 import sip
 from PyQt5.QtWidgets import QApplication, QWidget
@@ -18,7 +18,7 @@ from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
 from data_manager import vlc
 from data_manager import dataManagerInitListener
-from data_manager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager
+from data_manager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager, SkinConditionUploader
 from data_manager import changeSettings, saveSettings, getSettings, weekDay, lastDay
 
 from hardware_manager import MoistureManager, AudioManager
@@ -356,6 +356,7 @@ class MyApp(QWidget):
         self.sidebarModule = SidebarModule(parent=self)
         self.moistureModule = MoistureManager()
         self.audioModule = AudioManager()
+        self.skinConditionUploader = SkinConditionUploader()
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
@@ -706,6 +707,8 @@ class MyApp(QWidget):
         elif token['type'] == 'moisture':
             msg = ""
             measured_results = []
+            error_flag = False
+            median_value = -1
 
             try:
                 measured_results = self.moistureModule.measure(max_cnt=7, time_interval=0.5)
@@ -716,9 +719,13 @@ class MyApp(QWidget):
                     msg += '\n경고: 결과값이 부족하여 측정된 결과가 정확하지 않을 수 있습니다.'
             except:
                 msg = "측정 중 심각한 오류가 발생하였습니다.\n센서가 제대로 동작하고 있는지 확인하세요."
+                error_flag = True
 
             alertDialog = AlertDialog(title='피부 수분측정', msg=msg, timeout=5, parent=self)
             alertDialog.exec_()
+
+            if median_value != -1 and not error_flag:  # Upload to google drive storage
+                self.skinConditionUploader.upload(median_value, datetime.date.today())
         
         elif token['type'] == 'assistant':
             self.assistantThread.trigger()
