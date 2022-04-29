@@ -329,10 +329,10 @@ class AlertDialog(QMessageBox):
         self.timer.start()
 
     def changeContent(self):
-        self.setText(f"{self.msg}\n({self.time_to_wait}초 뒤에 자동으로 창이 닫힙니다)")
         self.time_to_wait -= 1
         if self.time_to_wait <= 0:
             self.close()
+        self.setText(f"{self.msg}\n({self.time_to_wait}초 뒤에 자동으로 창이 닫힙니다)")
 
     def closeEvent(self, event):
         self.timer.stop()
@@ -708,7 +708,7 @@ class MyApp(QWidget):
             measured_results = []
 
             try:
-                measured_results = self.moistureModule.measure(max_cnt=7)
+                measured_results = self.moistureModule.measure(max_cnt=7, time_interval=0.5)
                 measured_results.sort()
                 median_value = measured_results[len(measured_results) // 2]
                 msg = f"측정된 결과는 다음과 같습니다: {median_value}"

@@ -49,7 +49,7 @@ class i2c_moisture:
          self.write_word(FDC2214_SETTLECOUNT_CH0, 0xffff)
          self.write_word(FDC2214_RCOUNT_CH0, 0x2983)
          self.write_word(FDC2214_OFFSET_CH0, 0x0200)
-         self.write_word(FDC2214_CLOCK_DIVIDERS_CH0, 0x0a20)  ####point
+         self.write_word(FDC2214_CLOCK_DIVIDERS_CH0, 0x1520)  ####point
          self.write_word(FDC2214_DRIVE_CH0, 0x00F8)
          self.write_word(FDC2214_MUX_CONFIG, 0x0d02)
       except:
