@@ -562,13 +562,13 @@ def main(api_endpoint, credentials, project_id,
                         if assistant_trigger.istriggered():
                             if message_listener is not None:
                                 message_listener.edit('음성을 입력하세요', None)
-                                message_listener.edit('', ActionToken(name='vlc_volumn_down'))
+                                message_listener.edit('', ActionToken(name='vlc_volume_down'))
                             break
                 else:
                     click.pause(info='')
                 # END
             continue_conversation = assistant.assist()
-            message_listener.edit('', ActionToken(name='vlc_volumn_up'))
+            message_listener.edit('', ActionToken(name='vlc_volume_up'))
             # wait for user trigger if there is no follow-up turn in
             # the conversation.
             wait_for_user_trigger = not continue_conversation

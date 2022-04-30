@@ -1,3 +1,4 @@
+from gc import callbacks
 import os
 import sys
 import functools
@@ -95,27 +96,50 @@ class AssistantThread(QThread):
 # Note:
 #   Receives token from smartphone application and sends response token
 
+class DeviceMetadata:
+    def __init__(self) -> None:
+        self.music_title = 'default'
+        self.music_playing = 'false'
+        self.current_volume = 'default'
+
 class BluetoothThread(QThread):
     threadEvent = QtCore.pyqtSignal(dict)
 
     def __init__(self):
         super().__init__()
         self.controller = BluetoothController()
+        self.metadata = DeviceMetadata()
     
     def run(self):
         while True:
             self.controller.connect()
             while True:
                 token = self.controller.receive()
+                self.autoSend()
                 if token is None:
                     break
                 else:
-                    sendToken = self.generateSendToken(token)
+                    sendToken = self.generateSendToken(ticket=token['ticket'], tokentype=token['type'])
                     self.controller.send(sendToken)
                     self.threadEvent.emit(token)
     
-    def generateSendToken(self, token):
-        return token
+    def generateSendToken(self, ticket=-1, tokentype='init'):
+        sendtoken = {
+            'ticket': ticket,
+            'type': tokentype,
+        }
+
+        sendtoken['args'] = [
+            self.metadata.music_title,
+            self.metadata.music_playing,
+            self.metadata.current_volume
+        ]
+
+        return sendtoken
+
+    def autoSend(self, tokentype='init'):
+        sendtoken = self.generateSendToken(tokentype=tokentype)
+        self.controller.send(sendtoken)
 
 
 # Music Player Module
@@ -124,12 +148,14 @@ class BluetoothThread(QThread):
 #   Youtube music player module including manager and widget
 
 class MusicPlayerModule(object):
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent=None, callbacks=[]) -> None:
         self.parent = parent
         self.manager = YouTubeMusicManager()
 
         self.widget = None
         self.manager.bindCallback(self.refresh)
+        for method in callbacks:
+            self.manager.bindCallback(method)
         self.title_widget = None
         self.play_button_widget = None
         self.play_button_signal_connected = False
@@ -210,6 +236,12 @@ class MusicPlayerModule(object):
             self.play_button_widget.setIcon(QIcon(button_play))
         self.play_button_signal_connected = True
 
+    def currentMusicTitle(self):
+        music_title = 'default'
+        if self.manager.current_playlist is not None and self.manager.current_index is not None:
+            music_title = self.manager.current_playlist[self.manager.current_index]['snippet']['title']
+        return music_title
+
 
 # Sidebar Module
 #
@@ -254,8 +286,8 @@ class SidebarModule:
         ],
         MODE_SETTINGS: [
             SidebarConfig(name=0, icon_url=sidebar_refresh, action_token=SidebarActionToken('refresh')),
-            SidebarConfig(name=1, icon_url=sidebar_volumn_up, action_token=SidebarActionToken('master_volumn_up')),
-            SidebarConfig(name=2, icon_url=sidebar_volumn_down, action_token=SidebarActionToken('master_volumn_down')),
+            SidebarConfig(name=1, icon_url=sidebar_volumn_up, action_token=SidebarActionToken('master_volume_up')),
+            SidebarConfig(name=2, icon_url=sidebar_volumn_down, action_token=SidebarActionToken('master_volume_down')),
             SidebarConfig(name=3, icon_url=sidebar_back, action_token=SidebarActionToken('back')),
         ],
     }
@@ -352,10 +384,10 @@ class MyApp(QWidget):
         self.refreshedTime = QTime.currentTime()
         self.weatherDownloader = WeatherDownloader()
         self.scheduleDownloader = ScheduleDownloader()
-        self.musicPlayerModule = MusicPlayerModule()
+        self.musicPlayerModule = MusicPlayerModule(callbacks=[self.autoSendMetadata])
         self.sidebarModule = SidebarModule(parent=self)
         self.moistureModule = MoistureManager()
-        self.audioModule = AudioManager()
+        self.audioModule = AudioManager(callbacks=[self.autoSendMetadata])
         self.skinConditionUploader = SkinConditionUploader()
 
         # Window Settings
@@ -377,6 +409,8 @@ class MyApp(QWidget):
 
         # Run bluetooth thread
         self.bluetoothThread = BluetoothThread()
+        self.metadata = self.bluetoothThread.metadata
+        self.setMetaData()
         self.bluetoothThread.start()
         self.bluetoothThread.threadEvent.connect(self.takeAction)
 
@@ -652,6 +686,15 @@ class MyApp(QWidget):
         self.deleteLayout(self.mainLayout)  # remove main layout
         self.drawWindow()  # regenerate main layout and set widget layout as main layout
 
+    def setMetaData(self):
+        self.metadata.music_title = self.musicPlayerModule.currentMusicTitle()
+        self.metadata.music_playing = 'true' if self.musicPlayerModule.manager.isPlaying() else 'false'
+        self.metadata.current_volume = str(self.audioModule.current_volume)
+    
+    def autoSendMetadata(self):
+        self.setMetaData()
+        self.bluetoothThread.autoSend()
+
     @QtCore.pyqtSlot(dict)
     def takeThreadAction(self, token):
         self.takeAction(token)
@@ -733,16 +776,16 @@ class MyApp(QWidget):
         elif token['type'] == 'assistant_msg':
             self.assistantMsgLabel.setText(token['args'][0])
 
-        elif token['type'] == 'master_volumn_up':
+        elif token['type'] == 'master_volume_up':
             self.audioModule.volumnUp()
 
-        elif token['type'] == 'master_volumn_down':
+        elif token['type'] == 'master_volume_down':
             self.audioModule.volumnDown()
 
-        elif token['type'] == 'vlc_volumn_up':
+        elif token['type'] == 'vlc_volume_up':
             self.musicPlayerModule.manager.volumnUp()
 
-        elif token['type'] == 'vlc_volumn_down':
+        elif token['type'] == 'vlc_volume_down':
             self.musicPlayerModule.manager.volumeDown()
 
 

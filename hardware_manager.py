@@ -67,18 +67,26 @@ class ButtonManager:
 
 
 class AudioManager:
-    def __init__(self) -> None:
+    def __init__(self, callbacks=[]) -> None:
         self.mixer = alsaaudio.Mixer()
         self.mixer.setvolume(70)
-        self.current_volume = self.mixer.getvolume()
+        self.current_volume = self.mixer.getvolume()[0]
+        self.callbacks = callbacks
+
+    def bind(self, method):
+        self.callbacks.append((method))
 
     def volumnUp(self):
-        self.mixer.setvolume(int(self.current_volume[0]) + 10)
-        self.current_volume = self.mixer.getvolume()
+        self.mixer.setvolume(min(int(self.current_volume) + 10, 100))
+        self.current_volume = self.mixer.getvolume()[0]
+        for method in self.callbacks:
+            method()
 
     def volumnDown(self):
-        self.mixer.setvolume(int(self.current_volume[0]) - 10)
-        self.current_volume = self.mixer.getvolume()
+        self.mixer.setvolume(max(int(self.current_volume) - 10, 0))
+        self.current_volume = self.mixer.getvolume()[0]
+        for method in self.callbacks:
+            method()
 
 
 # Testbench code for moisture manager

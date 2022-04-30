@@ -485,18 +485,34 @@ class BluetoothController:
         
         except IOError or KeyboardInterrupt:
             logging.info('[BLUETOOTH] Client disconnected')
-            self.client_sock.close()
+            if self.client_sock is not None:
+                self.client_sock.close()
+            return None
+
+        except:
+            logging.info('[BLUETOOTH] Error occurred on receiving token')
+            if self.client_sock is not None:
+                self.client_sock.close()
             return None
     
     def send(self, decodedData):
+        if self.client_sock is None:
+            return None
+            
         try:
-            data = json.dumps(decodedData, separators=(',', ':'))
+            data = json.dumps(decodedData)
             self.client_sock.send(data)
-            print(data)
 
         except IOError or KeyboardInterrupt:
             logging.info('[BLUETOOTH] Client disconnected')
-            self.client_sock.close()
+            if self.client_sock is not None:
+                self.client_sock.close()
+            return None
+
+        except:
+            logging.info('[BLUETOOTH] Error occurred on sending token')
+            if self.client_sock is not None:
+                self.client_sock.close()
             return None
 
 
