@@ -381,7 +381,7 @@ class SkinConditionUploader:
             else:
                 targetFileID = items[0]['id']
 
-            # Download saved data and update
+            # Download saved data
             request = service.files().get_media(fileId=targetFileID)
             fh = io.BytesIO()
             downloader = MediaIoBaseDownload(fh, request)
@@ -394,26 +394,38 @@ class SkinConditionUploader:
             if content:
                 parsed = json.loads(content)
             else:
-                parsed = {}
+                parsed = {
+                    'daily': {},
+                    'monthly': {},
+                }
 
+            # Update daily data
             if isinstance(targetDate, str):
                 targetDate = datetime.date.fromisoformat(targetDate)
 
-            for key in parsed.keys():
+            for key in parsed['daily'].keys():
                 date_key = datetime.date.fromisoformat(key)
                 if targetDate - date_key > datetime.timedelta(30):  # if saved data is expired, delete data
-                    del parsed[key]
+                    del parsed['daily'][key]
             
             if targetDate.isoformat() in parsed.keys():
-                if len(parsed[targetDate.isoformat()]) >= 10:
-                    del parsed[targetDate.isoformat()][0]
-                parsed[targetDate.isoformat()].append(targetData)
+                if len(parsed['daily'][targetDate.isoformat()]) >= 10:
+                    del parsed['daily'][targetDate.isoformat()][0]
+                parsed['daily'][targetDate.isoformat()].append(targetData)
             else:
-                parsed[targetDate.isoformat()] = [targetData]
+                parsed['daily'][targetDate.isoformat()] = [targetData]
 
-            content = json.dumps(parsed)  # updated content
-
+            # Update monthly data
+            targetMonthKey = f"{targetDate.year}-{targetDate.month}"
+            if targetMonthKey in parsed['monthly']:
+                if parsed['monthly'][targetMonthKey][1] < 100000:
+                    parsed['monthly'][targetMonthKey][0] += targetData
+                    parsed['monthly'][targetMonthKey][1] += 1
+            else:
+                parsed['monthly'][targetMonthKey] = [targetData, 1]
+            
             # Upload updated content
+            content = json.dumps(parsed)  # updated content
             content_stream = io.BytesIO(bytes(content, 'utf-8'))
             uploader = MediaIoBaseUpload(content_stream, mimetype=driveTextFileType)
             updated_targetFile = service.files().update(fileId=targetFileID, body={
