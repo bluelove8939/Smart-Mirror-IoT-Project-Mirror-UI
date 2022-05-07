@@ -1,3 +1,4 @@
+import chunk
 import io
 import os
 import requests
@@ -6,9 +7,6 @@ import os.path
 import logging
 import datetime
 from gi.repository import GObject as gobject
-import cv2
-
-import reverse_image_api_wrapper
 
 # Google OAuth2 requirements
 from google.auth.transport.requests import Request
@@ -162,11 +160,7 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath):
         creds = Credentials.from_authorized_user_file(tokenpath, scopes)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            try:
-                creds.refresh(Request())
-            except:
-                flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
-                creds = flow.run_local_server()
+            creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
             creds = flow.run_local_server()
@@ -874,67 +868,6 @@ class YouTubeMusicManager:
     
     def volumeDown(self):
         self.player.audio_set_volume(30)
-
-
-# Style recommendation manager
-#
-# Note:
-#   Module for style recommendation
-
-cap = cv2.VideoCapture(0)
-
-def removeAllImgCaches():
-    for filename in os.listdir(os.path.join(os.curdir, 'caches')):
-        if filename.endswith('.jpg'):
-            os.remove(os.path.join(os.curdir, 'caches', filename))
-
-class StyleRecommendationManager:
-    def __init__(self, reverse_search_apikey, s3_bucket_name):
-        self.reverse_search_inst = reverse_image_api_wrapper.ReverseSearchApi(apikey=reverse_search_apikey, bucket_name=s3_bucket_name)
-        self.user_style_filename = None
-        self.result = None
-
-    def capture(self, name='default'):
-        j = json.loads('{}')
-        ret, frame = cap.read()
-        if not ret:
-            logging.error('[STYLE RECOMMENDATION] Frame capture error occured. Exiting feature...')
-            msg = {'exception': 'Frame capture error'}
-            j.update(msg)
-            return j
-
-        # save into image file
-        tm = datetime.datetime.now()
-        stamp = f"{tm:%Y%m%d-%H%M%S}"
-        self.user_style_filename = "user-style-" + stamp + ".jpg"
-        logging.info(f'[STYLE RECOMMENDATION] Saving captured picture as {self.user_style_filename}')
-        cv2.imwrite(os.path.join('caches', self.user_style_filename), frame)
-
-    def capture_and_search(self):
-        j = json.loads('{}')
-
-        # go through API and get result
-        logging.info(f'[STYLE RECOMMENDATION] Searching by image {self.user_style_filename}....')
-        self.result = self.reverse_search_inst.search_by_local_image(self.user_style_filename)
-
-        removeAllImgCaches()
-
-        # check if exception occured
-        if 'exception' in self.result:
-            logging.error(
-                f'[STYLE RECOMMENDATION] An error occured while transfer and receive data with reverse search api.')
-            return None
-        return self.result
-
-
-# # Testbench code for style recommendation
-#
-# if __name__ == '__main__':
-#     os.environ['AWS_SHARED_CREDENTIALS_FILE'] = "/home/jy-ubuntu/Downloads/awsconfig.ini"
-#     a = StyleRecommend("eb8ebf0acdac23660b37f17ae4d3a823afaa7a732823c82b9d26db741f0e14fb", "jongsul")
-#     r = a.capture_and_search(delay=0)
-#     print(r)
-#     print(type(r))
 
 
 # # Testbench code for bluetooth connection (RFCOMM)
