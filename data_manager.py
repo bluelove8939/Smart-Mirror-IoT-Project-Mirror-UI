@@ -155,15 +155,18 @@ dataManagerInitListener.setInitialized('readSettings')
 
 def makeCredentialFromClientfile(clientfile, scopes, savepath):
     creds = None
+    error_flag = False
 
     if os.path.exists(savepath):
-        creds = Credentials.from_authorized_user_file(tokenpath, scopes)
-    if not creds or not creds.valid:
+        try:
+            creds = Credentials.from_authorized_user_file(tokenpath, scopes)
+        except:
+            error_flag = True
+    if error_flag or not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
             except:
-                # dd
                 flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
                 creds = flow.run_local_server()
         else:
