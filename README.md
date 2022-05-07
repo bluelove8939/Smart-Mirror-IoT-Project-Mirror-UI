@@ -118,7 +118,7 @@ Note that the recent version of opencv may not campatible with some specific ver
 Make sure that your device has a compatible version of numpy.
 Also you this feature requires webcam to take picture of user's face.
 Before enabling this feature, you need to install webcam or raspberry pi camera module.
-If you already checked your device works fine, enable this feature simply by Eediting config.json just like below:
+If you already checked your device works fine, enable this feature simply by editing config.json just like below:
 
     "face-emotion-detection-enabled": true
 
@@ -137,3 +137,6 @@ You can access to the github repository of original face emotion detection proje
 
 Please follow the instruction from the repository above.
 Make sure that you already have your sensor attached to the device.
+If you followed all of the instruction above, then enable this feature by editing config.json.
+
+    "skin-condition-enabled": true

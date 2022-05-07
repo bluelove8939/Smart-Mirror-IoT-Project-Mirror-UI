@@ -699,13 +699,13 @@ class YouTubeMusicManager:
 
     def searchByEmotion(self):
         if not configurations['face-emotion-detection-enabled']:
-            return
+            return 'invalid'
         
         emotion_result = faceEmotionDetectModule.detect_motion_webcam()
 
         if emotion_result['exception'] != face_emotion_detection.azure_api_wrapper.NO_EXCEPTION_MSG:
             logging.error('[YOUTUBE MUSIC] Exception occurred on detecting face emotion')
-            return False
+            return 'invalid'
 
         pref_result, max_value = None, 0
 
@@ -720,7 +720,7 @@ class YouTubeMusicManager:
         logging.info(f'[YOUTUBE MUSIC] Face emotion estimation: {pref_result}')
         
         self.search(query=f"{pref_result} musics")
-        return True
+        return pref_result
     
     def search(self, query=None, cnt=5, nextpage=False):
         try:

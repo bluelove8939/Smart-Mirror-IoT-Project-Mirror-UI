@@ -3,5 +3,7 @@
     "google-assistant-enabled": true,
     "youtube-music-enabled": true,
     "face-emotion-detection-enabled": true,
+    "skin-condition-enabled": true,
+    "style-recommendation-enabled": true,
     "device-logging-option": "INFO"
 }

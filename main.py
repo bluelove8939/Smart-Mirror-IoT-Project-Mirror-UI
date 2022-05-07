@@ -741,11 +741,20 @@ class MyApp(QWidget):
             self.assistantMsgLabel.setText(token['args'][0])
 
         elif token['type'] == 'play_music_by_emotion':
+            alertDialog = AlertDialog(title='표정 분석', msg='표정 분석을 위해 얼굴을 비추세요', timeout=3, parent=self)
+            alertDialog.exec_()
+
             if not self.musicPlayerModule.manager.isStopped():
                 self.musicPlayerModule.manager.pause()
             result_valid = self.musicPlayerModule.manager.searchByEmotion()
+            msg = "표정 분석에 실패했습니다"
+
             if result_valid:
                 self.musicPlayerModule.manager.play()
+                msg=f"현재 감정 상태: {result_valid}\n적절한 음악을 재생합니다"
+            
+            alertDialog = AlertDialog(title='표정 분석', msg=msg, timeout=5, parent=self)
+            alertDialog.exec_()
 
         elif token['type'] == 'moisture':
             msg = ""
