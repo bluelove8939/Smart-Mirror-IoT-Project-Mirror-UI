@@ -162,7 +162,11 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath):
         creds = Credentials.from_authorized_user_file(tokenpath, scopes)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+            except:
+                flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
+                creds = flow.run_local_server()
         else:
             flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
             creds = flow.run_local_server()
