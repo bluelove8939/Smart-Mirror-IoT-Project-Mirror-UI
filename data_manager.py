@@ -159,11 +159,10 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath):
 
     if os.path.exists(savepath):
         try:
-            print('authorizing....')
             creds = Credentials.from_authorized_user_file(tokenpath, scopes)
-            print('credential loaded!')
         except:
             error_flag = True
+    logging.info(f"[DATA MANAGER] valid: {creds.valid}, error_flag: {error_flag}")
     if error_flag or not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             try:
@@ -176,6 +175,8 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath):
             creds = flow.run_local_server()
         with open(savepath, 'w') as savefile:
             savefile.write(creds.to_json())
+
+    logging.info("[DATA MANAGER] credential is successfully made")
 
     return creds
 
