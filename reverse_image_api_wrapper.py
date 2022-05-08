@@ -47,11 +47,10 @@ class ReverseSearchApi:
     def __init__(self, apikey, bucket_name):
         self.bucket_name = bucket_name
         self.apikey = apikey
-        # self.endpoint_url = "https://" + bucket_name + ".s3.amazonaws.com/" + image_filename
     
     def search_by_local_image(self, image_filename):
         j = json.loads('{}')
-        # an image from camera is already exists, so steps: upload -> api -> delete image. 
+        # an image from camera is already exists, so steps: upload -> api -> delete image.
         # upload image file to AWS S3 bucket and make it public
         if not upload_file_to_bucket(os.path.join('caches', image_filename), self.bucket_name):
             msg = {'exception': 'Failed to upload image to S3 bucket'}
@@ -60,28 +59,26 @@ class ReverseSearchApi:
             return j
         
         # call reverse search api
-        self.endpoint_url = "https://" + self.bucket_name + ".s3.amazonaws.com/" + image_filename
-        self.params = {
+        endpoint_url = "https://" + self.bucket_name + ".s3.amazonaws.com/" + image_filename
+        params = {
             "engine": "google_reverse_image", 
-            "image_url": self.endpoint_url, 
+            "image_url": endpoint_url,
             "api_key": self.apikey, 
             "hl": "ko", 
             "gl": "kr"
         }
-        self.search = GoogleSearch(self.params)
-        self.results = self.search.get_dict()
-        # print(self.results)
-        # print(type(self.results))
+        search = GoogleSearch(params)
+        results = search.get_dict()
         
         # check return response of API
-        if 'error' in self.results:
+        if 'error' in results:
             msg = {'exception': 'Error occured from response of Reverse Search API'}
             logging.error('[REVERSE SEARCH API] Error occured from response of Reverse Search API')
             j.update(msg)
             return j
         
         # copy results to JSON load
-        url_chunk = self.results['inline_images']
+        url_chunk = results['inline_images']
         for idx, s in enumerate(url_chunk):
             t = {1 + idx: s.get('source')}
             j.update(t)
