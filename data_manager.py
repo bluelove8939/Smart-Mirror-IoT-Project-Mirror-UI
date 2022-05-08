@@ -163,7 +163,7 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath):
         except:
             error_flag = True
     logging.info(f"[DATA MANAGER] valid: {creds.valid}, error_flag: {error_flag}")
-    if error_flag or not creds or not creds.valid:
+    if error_flag or not creds or not creds.valid or creds.expired:
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
