@@ -153,11 +153,13 @@ dataManagerInitListener.setInitialized('readSettings')
 # Note:
 #   Function for obtaining OAuth2 credential
 
-def makeCredentialFromClientfile(clientfile, scopes, savepath):
+def makeCredentialFromClientfile(clientfile, scopes, savepath, remove_existing_cred=False):
     creds = None
     error_flag = False
 
     if os.path.exists(savepath):
+        if remove_existing_cred:
+            os.remove(savepath)
         try:
             creds = Credentials.from_authorized_user_file(tokenpath, scopes)
         except:
@@ -214,7 +216,7 @@ if configurations['google-assistant-enabled']:
     credpath = os.path.join(os.path.expanduser('~'), '.config', 'google-oauthlib-tool', 'credentials.json')
     clientSecretPath = os.path.join(os.path.abspath(os.curdir), 'assets', 'keys', apikeys['googleassistantclientfilename'])
     assistant_scope = ['https://www.googleapis.com/auth/assistant-sdk-prototype']
-    assistant_creds = makeCredentialFromClientfile(clientSecretPath, assistant_scope, credpath)
+    assistant_creds = makeCredentialFromClientfile(clientSecretPath, assistant_scope, credpath, remove_existing_cred=True)
 
 dataManagerInitListener.setInitialized('googleAssistantAuth')
 
