@@ -159,7 +159,9 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath):
 
     if os.path.exists(savepath):
         try:
+            print('authorizing....')
             creds = Credentials.from_authorized_user_file(tokenpath, scopes)
+            print('credential loaded!')
         except:
             error_flag = True
     if error_flag or not creds or not creds.valid:
