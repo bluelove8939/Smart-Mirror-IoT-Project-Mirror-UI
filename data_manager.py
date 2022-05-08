@@ -173,8 +173,8 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath):
         else:
             flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
             creds = flow.run_local_server()
-        with open(savepath, 'w') as savefile:
-            savefile.write(creds.to_json())
+    with open(savepath, 'w') as savefile:
+        savefile.write(creds.to_json())
 
     logging.info("[DATA MANAGER] credential is successfully made")
 
