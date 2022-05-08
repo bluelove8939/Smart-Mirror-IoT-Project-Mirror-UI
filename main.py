@@ -19,7 +19,7 @@ from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 
 from data_manager import vlc
 from data_manager import dataManagerInitListener
-from data_manager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager, SkinConditionUploader
+from data_manager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager, SkinConditionUploader, StyleRecommendationManager
 from data_manager import changeSettings, saveSettings, getSettings, weekDay, lastDay
 
 from hardware_manager import MoistureManager, AudioManager
@@ -389,6 +389,7 @@ class MyApp(QWidget):
         self.moistureModule = MoistureManager()
         self.audioModule = AudioManager(callbacks=[self.autoSendMetadata])
         self.skinConditionUploader = SkinConditionUploader()
+        self.styleRecommendationManager = StyleRecommendationManager()
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
@@ -778,6 +779,11 @@ class MyApp(QWidget):
 
             if median_value != -1 and not error_flag:  # Upload to google drive storage
                 self.skinConditionUploader.upload(median_value, datetime.date.today())
+
+        elif token['type'] == 'style':
+            self.styleRecommendationManager.capture()
+            results = self.styleRecommendationManager.search()
+            print(results)
         
         elif token['type'] == 'assistant':
             self.assistantThread.trigger()
