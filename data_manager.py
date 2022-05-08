@@ -891,7 +891,7 @@ class YouTubeMusicManager:
 # Note:
 #   Module for style recommendation (searching and uploading result to google drive storage)
 
-os.environ['AWS_SHARED_CREDENTIALS_FILE'] = os.path.join(os.path.expanduser('~'), '.aws', 'credential')
+os.environ['AWS_SHARED_CREDENTIALS_FILE'] = os.path.join(os.path.expanduser('~'), '.aws', 'credentials')
 
 def removeAllImgCaches():
     for filename in os.listdir(os.path.join(os.curdir, 'caches')):
