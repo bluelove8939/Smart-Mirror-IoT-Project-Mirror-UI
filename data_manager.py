@@ -157,13 +157,13 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath, remove_existing_c
     creds = None
     error_flag = False
 
-    if remove_existing_cred:
-        if os.path.exists(savepath):
-            os.remove(savepath)
+    # if remove_existing_cred:
+    #     if os.path.exists(savepath):
+    #         os.remove(savepath)
 
     if os.path.exists(savepath):
         try:
-            creds = Credentials.from_authorized_user_file(tokenpath, scopes)
+            creds = Credentials.from_authorized_user_file(savepath, scopes)
         except:
             error_flag = True
     logging.info(f"[DATA MANAGER] valid: {creds.valid}, error_flag: {error_flag}, expired: {creds.expiry}")
@@ -218,7 +218,7 @@ if configurations['google-assistant-enabled']:
     credpath = os.path.join(os.path.expanduser('~'), '.config', 'google-oauthlib-tool', 'credentials.json')
     clientSecretPath = os.path.join(os.path.abspath(os.curdir), 'assets', 'keys', apikeys['googleassistantclientfilename'])
     assistant_scope = ['https://www.googleapis.com/auth/assistant-sdk-prototype']
-    assistant_creds = makeCredentialFromClientfile(clientSecretPath, assistant_scope, credpath, remove_existing_cred=True)
+    assistant_creds = makeCredentialFromClientfile(clientSecretPath, assistant_scope, credpath)
 
 dataManagerInitListener.setInitialized('googleAssistantAuth')
 
