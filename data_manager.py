@@ -892,6 +892,7 @@ class YouTubeMusicManager:
 #   Module for style recommendation (searching and uploading result to google drive storage)
 
 cap = cv2.VideoCapture(0)
+os.environ['AWS_SHARED_CREDENTIALS_FILE'] = os.path.join(os.path.expanduser('~'), '.aws', 'credential')
 
 def removeAllImgCaches():
     for filename in os.listdir(os.path.join(os.curdir, 'caches')):
@@ -942,7 +943,7 @@ class StyleRecommendationManager:
 
 
 if __name__ == '__main__':
-    os.environ['AWS_SHARED_CREDENTIALS_FILE'] = "/home/jy-ubuntu/Downloads/awsconfig.ini"
+    # os.environ['AWS_SHARED_CREDENTIALS_FILE'] = "/home/jy-ubuntu/Downloads/awsconfig.ini"
     a = StyleRecommendationManager()
     r = a.capture()
     if r == True:
