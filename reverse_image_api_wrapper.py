@@ -24,7 +24,7 @@ def upload_file_to_bucket(file_name, bucket, object_name=None):
         logging.error(e)
         return False
 
-    if response['ResponseMetadata']['HTTPStatusCode'] < 200 and response['ResponseMetadata']['HTTPStatusCode'] >= 300:
+    if response is None or (response['ResponseMetadata']['HTTPStatusCode'] < 200 and response['ResponseMetadata']['HTTPStatusCode'] >= 300):
         logging.error(f"[REVERSE IMAGE API] Failed uploading image file {file_name}")
         return False
 
@@ -36,7 +36,7 @@ def delete_object_from_bucket(bucket, object_name):
             Bucket=bucket,
             Key=object_name
     )
-    if response['ResponseMetadata']['HTTPStatusCode'] < 200 and response['ResponseMetadata']['HTTPStatusCode'] >= 300:
+    if response is None or (response['ResponseMetadata']['HTTPStatusCode'] < 200 and response['ResponseMetadata']['HTTPStatusCode'] >= 300):
         logging.error(f"[REVERSE IMAGE API] Failed deleting image file {object_name}")
         return False
     return True
