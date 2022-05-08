@@ -157,9 +157,11 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath, remove_existing_c
     creds = None
     error_flag = False
 
-    if os.path.exists(savepath):
-        if remove_existing_cred:
+    if remove_existing_cred:
+        if os.path.exists(savepath):
             os.remove(savepath)
+
+    if os.path.exists(savepath):
         try:
             creds = Credentials.from_authorized_user_file(tokenpath, scopes)
         except:
