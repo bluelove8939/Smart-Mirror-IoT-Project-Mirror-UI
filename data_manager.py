@@ -891,7 +891,6 @@ class YouTubeMusicManager:
 # Note:
 #   Module for style recommendation (searching and uploading result to google drive storage)
 
-cap = cv2.VideoCapture(0)
 os.environ['AWS_SHARED_CREDENTIALS_FILE'] = os.path.join(os.path.expanduser('~'), '.aws', 'credential')
 
 def removeAllImgCaches():
@@ -909,6 +908,7 @@ class StyleRecommendationManager:
 
     def capture(self):
         # After 5 seconds,
+        cap = cv2.VideoCapture(0)
         ret, frame = cap.read()
         if ret == False:
             logging.error('[STYLE RECOMMENDATION] Frame capture error occured. Exiting feature...')
