@@ -3,6 +3,7 @@ import os
 import sys
 import functools
 import datetime
+import time
 
 from PyQt5 import sip
 from PyQt5.QtWidgets import QApplication, QWidget
@@ -763,6 +764,9 @@ class MyApp(QWidget):
             error_flag = False
             median_value = -1
 
+            alertDialog = AlertDialog(title='피부 상태 분석', msg='피부 상태 분석을 위해 센서를 피부와 접촉하세요', timeout=3, parent=self)
+            alertDialog.exec_()
+
             try:
                 measured_results = self.moistureModule.measure(max_cnt=7, time_interval=0.5)
                 measured_results.sort()
@@ -781,8 +785,23 @@ class MyApp(QWidget):
                 self.skinConditionUploader.upload(median_value, datetime.date.today())
 
         elif token['type'] == 'style':
-            self.styleRecommendationManager.capture()
-            results = self.styleRecommendationManager.search()
+            msg = ""
+            results = None
+
+            alertDialog = AlertDialog(title='스타일 분석', msg='스타일 분석을 위해 전신을 비추세요 (5초 이후 분석합니다)', timeout=3, parent=self)
+            alertDialog.exec_()
+            try:
+                self.styleRecommendationManager.capture()
+                time.sleep(5)
+                results = self.styleRecommendationManager.search()
+                self.styleRecommendationManager.upload(targetData=results)
+                msg = "분석 결과를 스마트폰을 통해 확인하세요"
+            except:
+                msg = "분석 중 심각한 오류가 발생하였습니다.\n카메라가 제대로 동작하고 있는지 확인하세요."
+
+            alertDialog = AlertDialog(title='스타일 분석', msg=msg, timeout=5, parent=self)
+            alertDialog.exec_()
+
             print(results)
         
         elif token['type'] == 'assistant':

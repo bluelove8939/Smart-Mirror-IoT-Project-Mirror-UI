@@ -279,6 +279,8 @@ rootDirName = 'Ice Cream Hub'
 scheduleDirName = 'Schedules'
 skinConditionDirName = 'Skin Conditions'
 skinConditionFileName = 'skinconditions.json'
+styleDirName = "Styles"
+styleFileName = 'styles.json'
 driveFolderType = 'application/vnd.google-apps.folder'
 driveTextFileType = 'text/plain'
 
@@ -457,6 +459,86 @@ class SkinConditionUploader:
         except Exception or HttpError as error:
             logging.error(f"[SKIN CONDITION UPLOADER] HTTP request error ocurred: {error}")
         
+        return False
+
+class StyleUploader:
+    def __init__(self):
+        global creds
+        self.creds = creds
+
+    def upload(self, targetData):
+        try:
+            service = build('drive', 'v3', credentials=self.creds)
+
+            # Find out application root folder ID
+            results = service.files().list(
+                q=f"mimeType = '{driveFolderType}' and name = '{rootDirName}' and trashed = false",
+                spaces='drive',
+                fields='nextPageToken, files(id, name)').execute()
+            items = results.get('files', [])
+            if not items:  # If there's no root dir, then generate new one
+                rootDirFile = service.files().create(body={
+                    'name': rootDirName,
+                    'mimeType': driveFolderType,
+                }, fields='id').execute()
+                rootDirID = rootDirFile.get('id')
+            else:
+                rootDirID = items[0]['id']
+
+            # Find out skin condition folder
+            results = service.files().list(
+                q=f"mimeType = '{driveFolderType}' and name = '{styleDirName}' and trashed = false and '{rootDirID}' in parents",
+                spaces='drive',
+                fields='nextPageToken, files(id, name)').execute()
+            items = results.get('files', [])
+            if not items:  # If there's no skin condition dir, then generate new one
+                styleDirFile = service.files().create(body={
+                    'name': styleDirName,
+                    'mimeType': driveFolderType,
+                    'parents': [rootDirID]
+                }, fields='id').execute()
+                styleDirID = styleDirFile.get('id')
+            else:
+                styleDirID = items[0]['id']
+
+            # Find out target file ID
+            results = service.files().list(
+                q=f"name = '{styleFileName}' and trashed = false and '{styleDirID}' in parents",
+                spaces='drive',
+                fields='nextPageToken, files(id, name)').execute()
+            items = results.get('files', [])
+            if not items:  # If there's no target file, then generate new one
+                targetFile = service.files().create(body={
+                    'name': styleFileName,
+                    'mimeType': driveTextFileType,
+                    'parents': [styleDirID]
+                }, fields='id').execute()
+                targetFileID = targetFile.get('id')
+            else:
+                targetFileID = items[0]['id']
+
+            # Download saved data
+            parsed = {
+                'body': targetData
+            }
+
+            # Upload updated content
+            content = json.dumps(parsed)  # updated content
+            content_stream = io.BytesIO(bytes(content, 'utf-8'))
+            uploader = MediaIoBaseUpload(content_stream, mimetype=driveTextFileType)
+            updated_targetFile = service.files().update(fileId=targetFileID, body={
+                'name': skinConditionFileName,
+                'mimeType': driveTextFileType,
+            }, media_body=uploader, fields='id').execute()
+
+            if not updated_targetFile.get('id'):
+                raise Exception('Updated target file id is not identified')
+
+            return True
+
+        except Exception or HttpError as error:
+            logging.error(f"[STYLE DATA UPLOADER] HTTP request error ocurred: {error}")
+
         return False
 
 
@@ -905,6 +987,8 @@ class StyleRecommendationManager:
         self.reverse_search_inst = reverse_image_api_wrapper.ReverseSearchApi(apikey=self.reverse_search_apikey,
                                                                               bucket_name=self.s3_bucket_name)
         self.user_style_filename = None
+        self.cached_result = None
+        self.uploader = StyleUploader()
 
     def capture(self):
         cap = cv2.VideoCapture(0)
@@ -936,9 +1020,21 @@ class StyleRecommendationManager:
         # check if exception occured
         if 'exception' in result:
             logging.error(
-                f'[STYLE RECOMMENDATION] An error occured while transfer and receive data with reverse search api')
+                f'[STYLE RECOMMENDATION] Error occured while transferring and receiving data with reverse search api')
             return None
+
+        self.cached_result = result
+
         return result
+
+    def upload(self, targetData=None):
+        if targetData is None:
+            if self.cached_result is None:
+                logging.error('[STYLE RECOMMENDATION] Error occured on uploading style data: No data available')
+                raise Exception()
+            targetData = self.cached_result
+
+        self.uploader.upload(targetData)
 
 
 if __name__ == '__main__':
