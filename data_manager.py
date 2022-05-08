@@ -162,7 +162,7 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath):
             creds = Credentials.from_authorized_user_file(tokenpath, scopes)
         except:
             error_flag = True
-    logging.info(f"[DATA MANAGER] valid: {creds.valid}, error_flag: {error_flag}, expired: {creds.expired}")
+    logging.info(f"[DATA MANAGER] valid: {creds.valid}, error_flag: {error_flag}, expired: {creds.expiry}")
     if error_flag or not creds or not creds.valid or creds.expired:
         if creds and creds.expired and creds.refresh_token:
             try:
