@@ -20,7 +20,7 @@ def upload_file_to_bucket(file_name, bucket, object_name=None):
     # Upload the file
     try:
         response = s3_client.upload_file(file_name, bucket, object_name, ExtraArgs={'ACL': 'public-read'})
-    except ClientError as e:
+    except:
         logging.error(e)
         return False
 
