@@ -526,6 +526,7 @@ class StyleUploader:
 
             # Download saved data
             parsed = {
+                'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'body': targetData
             }
 
@@ -534,7 +535,7 @@ class StyleUploader:
             content_stream = io.BytesIO(bytes(content, 'utf-8'))
             uploader = MediaIoBaseUpload(content_stream, mimetype=driveTextFileType)
             updated_targetFile = service.files().update(fileId=targetFileID, body={
-                'name': skinConditionFileName,
+                'name': styleFileName,
                 'mimeType': driveTextFileType,
             }, media_body=uploader, fields='id').execute()
 
