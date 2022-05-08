@@ -272,8 +272,15 @@ class WeatherDownloader:
 # 
 # Description:
 #   Module for uploading skin condition data to user's private google drive storage
-#   Upload skin condition data via Foofle Drive API (v3)
+#   Upload skin condition data via Google Drive API (v3)
 #   API link: https://developers.google.com/drive/api/v3/about-files
+#
+# [3] StyleUploader
+#
+# Description:
+#   Module for uploading style recommendation condition data to user's private google drive storage
+#   Upload style recommendation condition data(from reverse search API) via Google Drive API (v3)
+#   API link: https://developers.google.com/drive/api/v3/about-files.
 
 rootDirName = 'Ice Cream Hub'
 scheduleDirName = 'Schedules'
@@ -973,7 +980,8 @@ class YouTubeMusicManager:
 # Note:
 #   Module for style recommendation (searching and uploading result to google drive storage)
 
-os.environ['AWS_SHARED_CREDENTIALS_FILE'] = os.path.join(os.path.expanduser('~'), '.aws', 'credentials')
+if configurations['style-recommendation-enabled']:
+    os.environ['AWS_SHARED_CREDENTIALS_FILE'] = os.path.join(os.path.expanduser('~'), '.aws', 'credentials')
 
 def removeAllImgCaches():
     for filename in os.listdir(os.path.join(os.curdir, 'caches')):
@@ -991,6 +999,10 @@ class StyleRecommendationManager:
         self.uploader = StyleUploader()
 
     def capture(self):
+        if not configurations['style-recommendation-enabled']:
+            logging.error(f"[STYLE RECOMMENDATION] Style recommendation is not enabled")
+            return False
+
         cap = cv2.VideoCapture(0)
         ret, frame = cap.read()
         if ret == False:
@@ -1007,6 +1019,10 @@ class StyleRecommendationManager:
         return True
 
     def search(self):
+        if not configurations['style-recommendation-enabled']:
+            logging.error(f"[STYLE RECOMMENDATION] Style recommendation is not enabled")
+            return None
+
         if self.user_style_filename is None:
             logging.error(f"[STYLE RECOMMENDATION] Error ocurred on searching: There aren't any image captured")
             return None
@@ -1028,6 +1044,10 @@ class StyleRecommendationManager:
         return result
 
     def upload(self, targetData=None):
+        if not configurations['style-recommendation-enabled']:
+            logging.error(f"[STYLE RECOMMENDATION] Style recommendation is not enabled")
+            return
+
         if targetData is None:
             if self.cached_result is None:
                 logging.error('[STYLE RECOMMENDATION] Error occured on uploading style data: No data available')
@@ -1037,14 +1057,14 @@ class StyleRecommendationManager:
         self.uploader.upload(targetData)
 
 
-if __name__ == '__main__':
-    # os.environ['AWS_SHARED_CREDENTIALS_FILE'] = "/home/jy-ubuntu/Downloads/awsconfig.ini"
-    a = StyleRecommendationManager()
-    r = a.capture()
-    if r == True:
-        r = a.search()
-    print(r)
-    print(type(r))
+# if __name__ == '__main__':
+#     # os.environ['AWS_SHARED_CREDENTIALS_FILE'] = "/home/jy-ubuntu/Downloads/awsconfig.ini"
+#     a = StyleRecommendationManager()
+#     r = a.capture()
+#     if r == True:
+#         r = a.search()
+#     print(r)
+#     print(type(r))
 
 
 # # Testbench code for bluetooth connection (RFCOMM)

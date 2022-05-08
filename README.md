@@ -137,6 +137,29 @@ You can access to the github repository of original face emotion detection proje
 
 Please follow the instruction from the repository above.
 Make sure that you already have your sensor attached to the device.
-If you followed all of the instruction above, then enable this feature by editing config.json.
+If you followed all the instruction above, then enable this feature by editing config.json.
 
     "skin-condition-enabled": true
+
+
+## Style recommendation feature setup guide
+
+This feature is designed by codeveloper named 'kimBoeGeun' and 'freezinghands'.
+Note that codes listed below are originally written and licensed by him:
+
+    data_manager.py (SkinRecommendationManager)
+    reverse_image_api-wrapper.py
+
+Make sure that you already have your webcam attached to the device.
+Run setup code before enabling this feature.
+
+    bash raspberrypi-style-recom-setup.sh
+
+After running the code above, make AWS credential file to shared directory by running the code below.
+
+    aws configure
+
+Check there's a file named 'credentials' inside the directory '~/pi/.aws/'
+If you followed all the instruction above, then enable this feature by editing config.json.
+
+    "style-recommendation-enabled": true

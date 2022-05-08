@@ -788,11 +788,10 @@ class MyApp(QWidget):
             msg = ""
             results = None
 
-            alertDialog = AlertDialog(title='스타일 분석', msg='스타일 분석을 위해 전신을 비추세요 (5초 이후 분석합니다)', timeout=3, parent=self)
+            alertDialog = AlertDialog(title='스타일 분석', msg='스타일 분석을 위해 전신을 비추세요\n창이 닫히면 스타일을 특정합니다', timeout=5, parent=self)
             alertDialog.exec_()
             try:
                 self.styleRecommendationManager.capture()
-                time.sleep(5)
                 results = self.styleRecommendationManager.search()
                 self.styleRecommendationManager.upload(targetData=results)
                 msg = "분석 결과를 스마트폰을 통해 확인하세요"
