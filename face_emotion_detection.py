@@ -25,9 +25,6 @@ def detect_faces(frame):
     return detections
 #---------------------------------------------------
 
-# USB webcam initialization (may be also applicable for raspberry pi)
-cap = cv2.VideoCapture(0)
-
 def removeAllImgCaches():
     for filename in os.listdir(os.path.join(os.curdir, 'caches')):
         if filename.endswith('.jpg'):
@@ -49,6 +46,8 @@ class MirrorFaceDetect:
         self.stamp = time.time()
 
         # check if USB webcam is connected
+        # USB webcam initialization (may be also applicable for raspberry pi)
+        cap = cv2.VideoCapture(0)
         if (cap.isOpened() == False):
             msg = {'exception': 'Webcam is not available'}
             j.update(msg)

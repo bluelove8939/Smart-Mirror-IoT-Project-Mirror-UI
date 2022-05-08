@@ -907,7 +907,6 @@ class StyleRecommendationManager:
         self.user_style_filename = None
 
     def capture(self):
-        # After 5 seconds,
         cap = cv2.VideoCapture(0)
         ret, frame = cap.read()
         if ret == False:
