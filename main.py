@@ -537,12 +537,15 @@ class MyApp(QWidget):
         return groupbox
 
     def generateSidebarWidget(self):
+        layout = QHBoxLayout()
         groupbox = self.sidebarModule.widget
         groupbox.setFixedHeight(120)
-        groupbox.setFixedWidth(20)
+        groupbox.setFixedWidth(50)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
+        layout.addStretch(1)
+        layout.addWidget(groupbox)
 
-        return groupbox
+        return layout
 
     def generateAssistantWidget(self):
         groupbox = QGroupBox()
