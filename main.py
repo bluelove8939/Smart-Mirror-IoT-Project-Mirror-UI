@@ -522,7 +522,7 @@ class MyApp(QWidget):
                                 "    border-bottom-left-radius: 3px;\n"
                                 "    border-top-right-radius: 3px;\n"
                                 "    border-top-left-radius: 3px;\n"
-                                "    background-color: rgb(200, 200, 200);\n"
+                                "    background-color: rgb(98, 114, 164);\n"
                                 "}\n"
                                 "\n"
                                 "")
