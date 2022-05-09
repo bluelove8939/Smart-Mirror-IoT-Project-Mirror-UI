@@ -650,6 +650,7 @@ class MyApp(QWidget):
     def generateCalenderWidget(self):
         groupbox = QGroupBox()
         groupbox.setFixedWidth(190)
+        groupbox.setFixedHeight(240)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
         
         today = QDate.currentDate()
