@@ -1,5 +1,6 @@
 import logging
 import time
+import json
 import RPi.GPIO as GPIO
 
 # Alsa audio mixer
@@ -147,11 +148,11 @@ class ButtonManager:
 
 
 class AudioManager:
-    def __init__(self) -> None:
+    def __init__(self, callbacks=None) -> None:
         self.mixer = alsaaudio.Mixer()
         self.mixer.setvolume(70)
         self.current_volume = self.mixer.getvolume()[0]
-        self.callbacks = []
+        self.callbacks = [] if callbacks is None else list(callbacks[:])
 
     def bind(self, method, *args):
         self.callbacks.append((method, args))
