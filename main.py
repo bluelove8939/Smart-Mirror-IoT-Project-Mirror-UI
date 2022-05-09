@@ -508,8 +508,8 @@ class MyApp(QWidget):
         barWidget.setLayoutDirection(Qt.LeftToRight)
         barWidget.setFixedHeight(10)
         barWidget.setStyleSheet("QProgressBar{\n"
-                                "    background-color: rgb(98, 114, 164);\n"
-                                "    color:rgb(200,200,200);\n"
+                                "    background-color: rgb(200, 200, 200);\n"
+                                "    color:rgb(98, 114, 164);\n"
                                 "    border-style: none;\n"
                                 "    border-bottom-right-radius: 3px;\n"
                                 "    border-bottom-left-radius: 3px;\n"
@@ -527,6 +527,7 @@ class MyApp(QWidget):
                                 "\n"
                                 "")
         barWidget.setTextVisible(False)
+        self.progressbarWidget.setValue(100)
         return barWidget
 
     def generateMusicPlayerWidget(self):
@@ -781,15 +782,20 @@ class MyApp(QWidget):
             alertDialog = AlertDialog(title='표정 분석', msg='표정 분석을 위해 얼굴을 비추세요', timeout=3, parent=self)
             alertDialog.exec_()
 
+            self.progressbarWidget.setValue(0)
+
             if not self.musicPlayerModule.manager.isStopped():
                 self.musicPlayerModule.manager.pause()
             result_valid = self.musicPlayerModule.manager.searchByEmotion()
+            self.progressbarWidget.setValue(50)
             msg = "표정 분석에 실패했습니다"
 
             if result_valid:
                 self.musicPlayerModule.manager.play()
                 msg=f"현재 감정 상태: {result_valid}\n적절한 음악을 재생합니다"
-            
+
+            self.progressbarWidget.setValue(100)
+
             alertDialog = AlertDialog(title='표정 분석', msg=msg, timeout=5, parent=self)
             alertDialog.exec_()
 
@@ -802,10 +808,14 @@ class MyApp(QWidget):
             alertDialog = AlertDialog(title='피부 상태 분석', msg='피부 상태 분석을 위해 센서를 피부와 접촉하세요', timeout=3, parent=self)
             alertDialog.exec_()
 
+            self.progressbarWidget.setValue(0)
+
             try:
                 measured_results = self.moistureModule.measure(max_cnt=7, time_interval=0.5)
+                self.progressbarWidget.setValue(30)
                 measured_results.sort()
                 median_value = measured_results[len(measured_results) // 2]
+                self.progressbarWidget.setValue(50)
                 msg = f"측정된 결과는 다음과 같습니다: {median_value}"
                 if len(measured_results) < 4:
                     msg += '\n경고: 결과값이 부족하여 측정된 결과가 정확하지 않을 수 있습니다.'
@@ -813,11 +823,15 @@ class MyApp(QWidget):
                 msg = "측정 중 심각한 오류가 발생하였습니다.\n센서가 제대로 동작하고 있는지 확인하세요."
                 error_flag = True
 
-            alertDialog = AlertDialog(title='피부 수분측정', msg=msg, timeout=5, parent=self)
-            alertDialog.exec_()
+            self.progressbarWidget.setValue(70)
 
             if median_value != -1 and not error_flag:  # Upload to google drive storage
                 self.skinConditionUploader.upload(median_value, datetime.date.today())
+
+            self.progressbarWidget.setValue(100)
+
+            alertDialog = AlertDialog(title='피부 수분측정', msg=msg, timeout=5, parent=self)
+            alertDialog.exec_()
 
         elif token['type'] == 'style':
             msg = ""
@@ -825,18 +839,22 @@ class MyApp(QWidget):
 
             alertDialog = AlertDialog(title='스타일 분석', msg='스타일 분석을 위해 전신을 비추세요\n창이 닫히면 스타일을 특정합니다', timeout=5, parent=self)
             alertDialog.exec_()
+            self.progressbarWidget.setValue(0)
+
             try:
                 self.styleRecommendationManager.capture()
+                self.progressbarWidget.setValue(20)
                 results = self.styleRecommendationManager.search()
+                self.progressbarWidget.setValue(50)
                 self.styleRecommendationManager.upload(targetData=results)
+                self.progressbarWidget.setValue(70)
                 msg = "분석 결과를 스마트폰을 통해 확인하세요"
             except:
                 msg = "분석 중 심각한 오류가 발생하였습니다.\n카메라가 제대로 동작하고 있는지 확인하세요."
 
+            self.progressbarWidget.setValue(100)
             alertDialog = AlertDialog(title='스타일 분석', msg=msg, timeout=5, parent=self)
             alertDialog.exec_()
-
-            print(results)
         
         elif token['type'] == 'assistant':
             self.assistantThread.trigger()
