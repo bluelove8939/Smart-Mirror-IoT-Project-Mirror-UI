@@ -445,8 +445,8 @@ class MyApp(QWidget):
         self.mainLayout = None
         self.drawWindow()  # generate main layout and set widget layout as main layout
 
-        # self.showFullScreen()
-        self.show()
+        self.showFullScreen()
+        # self.show()
 
     def drawWindow(self):
         # Required widget
@@ -465,18 +465,31 @@ class MyApp(QWidget):
         
         self.mainLayout.addStretch(1)
 
-        sidebarLayout = QHBoxLayout()
+        # sidebarLayout = QHBoxLayout()
+        # sidebarLayout.addStretch(1)
+        # sidebarLayout.addWidget(self.sidebarWidget)
+        # self.mainLayout.addLayout(sidebarLayout)
+        #
+        # self.mainLayout.addStretch(1)
+        #
+        # centerLayout = QHBoxLayout()
+        # centerLayout.addWidget(self.scheduleWidget)
+        # centerLayout.addStretch(1)
+        # centerLayout.addWidget(self.playerWidget)
+        # self.mainLayout.addLayout(centerLayout)
+
+        topLayout = QHBoxLayout()
+        scheduleLayout = QVBoxLayout()
+        scheduleLayout.addStretch(1)
+        scheduleLayout.addWidget(self.scheduleWidget)
+        topLayout.addLayout(scheduleLayout)
+        topLayout.addStretch(1)
+        sidebarLayout = QVBoxLayout()
         sidebarLayout.addStretch(1)
         sidebarLayout.addWidget(self.sidebarWidget)
-        self.mainLayout.addLayout(sidebarLayout)
-
-        self.mainLayout.addStretch(1)
-
-        centerLayout = QHBoxLayout()
-        centerLayout.addWidget(self.scheduleWidget)
-        centerLayout.addStretch(1)
-        centerLayout.addWidget(self.playerWidget)
-        self.mainLayout.addLayout(centerLayout)
+        sidebarLayout.addStretch(1)
+        sidebarLayout.addWidget(self.playerWidget)
+        self.mainLayout.addLayout(topLayout)
 
         bottomLayout = QHBoxLayout()
         bottomLayout.addWidget(self.weatherWidget)
