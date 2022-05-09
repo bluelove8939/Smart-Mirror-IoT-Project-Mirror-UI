@@ -462,21 +462,6 @@ class MyApp(QWidget):
         self.mainLayout = QVBoxLayout()
         self.mainLayout.setContentsMargins(20, 20, 20, 20)
         self.mainLayout.addWidget(self.dateTimeWidget)
-        
-        self.mainLayout.addStretch(1)
-
-        # sidebarLayout = QHBoxLayout()
-        # sidebarLayout.addStretch(1)
-        # sidebarLayout.addWidget(self.sidebarWidget)
-        # self.mainLayout.addLayout(sidebarLayout)
-        #
-        # self.mainLayout.addStretch(1)
-        #
-        # centerLayout = QHBoxLayout()
-        # centerLayout.addWidget(self.scheduleWidget)
-        # centerLayout.addStretch(1)
-        # centerLayout.addWidget(self.playerWidget)
-        # self.mainLayout.addLayout(centerLayout)
 
         topLayout = QHBoxLayout()
         scheduleLayout = QVBoxLayout()
@@ -554,6 +539,7 @@ class MyApp(QWidget):
     def generateSidebarWidget(self):
         groupbox = self.sidebarModule.widget
         groupbox.setFixedHeight(120)
+        groupbox.setFixedWidth(20)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
         return groupbox
