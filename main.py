@@ -489,6 +489,7 @@ class MyApp(QWidget):
         sidebarLayout.addWidget(self.sidebarWidget)
         sidebarLayout.addStretch(1)
         sidebarLayout.addWidget(self.playerWidget)
+        topLayout.addLayout(sidebarLayout)
         self.mainLayout.addLayout(topLayout)
 
         bottomLayout = QHBoxLayout()
