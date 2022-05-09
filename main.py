@@ -506,6 +506,7 @@ class MyApp(QWidget):
     def generateProgressbarWidget(self):
         barWidget = QProgressBar()
         barWidget.setLayoutDirection(Qt.LeftToRight)
+        barWidget.setFixedHeight(10)
         barWidget.setStyleSheet("QProgressBar{\n"
                                 "    background-color: rgb(98, 114, 164);\n"
                                 "    color:rgb(200,200,200);\n"
@@ -521,10 +522,11 @@ class MyApp(QWidget):
                                 "    border-bottom-left-radius: 10px;\n"
                                 "    border-top-right-radius: 10px;\n"
                                 "    border-top-left-radius: 10px;\n"
-                                "    background-color: qlineargradient(spread:pad, x1:0, y1:0.511364, x2:1, y2:0.523, stop:0 rgba(254, 121, 199, 255), stop:1 rgba(170, 85, 255, 255));\n"
+                                "    background-color: rgb(200, 200, 200);\n"
                                 "}\n"
                                 "\n"
                                 "")
+        barWidget.setTextVisible(False)
         return barWidget
 
     def generateMusicPlayerWidget(self):
