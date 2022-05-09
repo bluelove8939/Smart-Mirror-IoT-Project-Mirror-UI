@@ -549,6 +549,7 @@ class MyApp(QWidget):
 
     def generateAssistantWidget(self):
         groupbox = QGroupBox()
+        groupbox.setFixedHeight(60)
         groupbox.setFixedWidth(440)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
