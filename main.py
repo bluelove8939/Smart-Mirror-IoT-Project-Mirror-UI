@@ -7,7 +7,7 @@ import time
 
 from PyQt5 import sip
 from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5.QtWidgets import QLabel, QGroupBox, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QLabel, QGroupBox, QPushButton, QMessageBox, QProgressBar
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout  # Layouts
 
 from PyQt5 import QtCore
@@ -435,12 +435,13 @@ class MyApp(QWidget):
         self.assistant_trigger_widget.setIconSize(QtCore.QSize(30, 30))
 
         # Generate main window layout and show that in full screen
-        self.scheduleWidget = None   # schedule widget
-        self.assistantWidget = None  # assistant widget
-        self.weatherWidget = None    # weather widget
-        self.calendarWidget = None   # calendar widget
-        self.playerWidget = None     # youtube music player widget
-        self.sidebarWidget = None    # sidebar widget
+        self.scheduleWidget = None     # schedule widget
+        self.assistantWidget = None    # assistant widget
+        self.weatherWidget = None      # weather widget
+        self.calendarWidget = None     # calendar widget
+        self.playerWidget = None       # youtube music player widget
+        self.sidebarWidget = None      # sidebar widget
+        self.progressbarWidget = None  # progressbar widget
         self.mainLayout = None
         self.drawWindow()  # generate main layout and set widget layout as main layout
 
@@ -455,6 +456,7 @@ class MyApp(QWidget):
         self.calendarWidget = self.generateCalenderWidget()
         self.playerWidget = self.generateMusicPlayerWidget()
         self.sidebarWidget = self.generateSidebarWidget()
+        self.progressbarWidget = self.generateProgressbarWidget()
 
         # Generating layout
         self.mainLayout = QVBoxLayout()
@@ -488,6 +490,8 @@ class MyApp(QWidget):
         assistantLayout.addStretch(1)
         self.mainLayout.addLayout(assistantLayout)
 
+        self.mainLayout.addWidget(self.progressbarWidget)
+
         self.setLayout(self.mainLayout)
 
     def showTime(self):
@@ -498,6 +502,30 @@ class MyApp(QWidget):
         refreshTerm = getSettings('refresh_term')
         if (self.refreshedTime.secsTo(QTime.currentTime()) // 60) >= refreshTerm:
             self.refresh()
+
+    def generateProgressbarWidget(self):
+        barWidget = QProgressBar()
+        barWidget.setLayoutDirection(Qt.LeftToRight)
+        barWidget.setStyleSheet("QProgressBar{\n"
+                                "    background-color: rgb(98, 114, 164);\n"
+                                "    color:rgb(200,200,200);\n"
+                                "    border-style: none;\n"
+                                "    border-bottom-right-radius: 10px;\n"
+                                "    border-bottom-left-radius: 10px;\n"
+                                "    border-top-right-radius: 10px;\n"
+                                "    border-top-left-radius: 10px;\n"
+                                "    text-align: center;\n"
+                                "}\n"
+                                "QProgressBar::chunk{\n"
+                                "    border-bottom-right-radius: 10px;\n"
+                                "    border-bottom-left-radius: 10px;\n"
+                                "    border-top-right-radius: 10px;\n"
+                                "    border-top-left-radius: 10px;\n"
+                                "    background-color: qlineargradient(spread:pad, x1:0, y1:0.511364, x2:1, y2:0.523, stop:0 rgba(254, 121, 199, 255), stop:1 rgba(170, 85, 255, 255));\n"
+                                "}\n"
+                                "\n"
+                                "")
+        return barWidget
 
     def generateMusicPlayerWidget(self):
         groupbox = self.musicPlayerModule.widget
