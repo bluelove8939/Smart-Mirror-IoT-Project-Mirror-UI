@@ -469,12 +469,15 @@ class MyApp(QWidget):
         scheduleLayout.addWidget(self.scheduleWidget)
         topLayout.addLayout(scheduleLayout)
         topLayout.addStretch(1)
-        sidebarLayout = QVBoxLayout()
+        leftLayout = QVBoxLayout()
+        leftLayout.addStretch(1)
+        sidebarLayout = QHBoxLayout()
         sidebarLayout.addStretch(1)
         sidebarLayout.addWidget(self.sidebarWidget)
-        sidebarLayout.addStretch(1)
-        sidebarLayout.addWidget(self.playerWidget)
-        topLayout.addLayout(sidebarLayout)
+        leftLayout.addLayout(sidebarLayout)
+        leftLayout.addStretch(1)
+        leftLayout.addWidget(self.playerWidget)
+        topLayout.addLayout(leftLayout)
         self.mainLayout.addLayout(topLayout)
 
         bottomLayout = QHBoxLayout()
@@ -537,15 +540,12 @@ class MyApp(QWidget):
         return groupbox
 
     def generateSidebarWidget(self):
-        layout = QHBoxLayout()
         groupbox = self.sidebarModule.widget
         groupbox.setFixedHeight(120)
         groupbox.setFixedWidth(50)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
-        layout.addStretch(1)
-        layout.addWidget(groupbox)
 
-        return layout
+        return groupbox
 
     def generateAssistantWidget(self):
         groupbox = QGroupBox()
