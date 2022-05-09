@@ -23,11 +23,10 @@ from data_manager import dataManagerInitListener
 from data_manager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager, SkinConditionUploader, StyleRecommendationManager
 from data_manager import changeSettings, saveSettings, getSettings, weekDay, lastDay
 
-from hardware_manager import MoistureManager, AudioManager
+from hardware_manager import MoistureManager, AudioManager, ButtonManager
 
 
 # Widget styles
-
 widgetDefaultStyleSheet = 'background-color: black; border-style: solid; border-color: white; border-width: 0.5px; border-radius: 10px;'
 labelDefaultStyleSheet = 'border-style: none;'
 
@@ -299,6 +298,12 @@ class SidebarModule:
         self.widget = None
         self.buttons = []
         self.initWindow()
+
+        self.hardwareButtonManager = ButtonManager()  # Hardware button trigger manager
+        self.hardwareButtonManager.bind(ButtonManager.BUTTON0, self.trigger, 0)
+        self.hardwareButtonManager.bind(ButtonManager.BUTTON1, self.trigger, 1)
+        self.hardwareButtonManager.bind(ButtonManager.BUTTON2, self.trigger, 2)
+        self.hardwareButtonManager.bind(ButtonManager.BUTTON3, self.trigger, 3)
 
     def initWindow(self):
         self.widget = QGroupBox()

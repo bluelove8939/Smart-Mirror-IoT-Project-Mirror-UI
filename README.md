@@ -136,6 +136,10 @@ You can access to the github repository of original face emotion detection proje
     https://github.com/kimBoeGeun/jongsul_KBG
 
 Please follow the instruction from the repository above.
+And run the code below to install all depencies required.
+
+    bash raspberrypi-skin-setup.sh
+
 Make sure that you already have your sensor attached to the device.
 If you followed all the instruction above, then enable this feature by editing config.json.
 

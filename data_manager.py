@@ -17,18 +17,10 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from googleapiclient.errors import HttpError
 
-# YouTube music player requirements
-import pafy
-import vlc
-
 # Bluetooth requirements (pybluez lib)
 import bluetooth
 
-# Face emotion detection requirements
-import face_emotion_detection
-
-# Reverse search API wrapper module
-import reverse_image_api_wrapper
+# Other requirements import code are at 'Reading device configuration' section
 
 
 # Data Manager Init Listener
@@ -98,6 +90,8 @@ configurations = {
     "google-assistant-enabled": False,
     "youtube-music-enabled": False,
     "face-emotion-detection-enabled": False,
+    "skin-condition-enabled": False,
+    "style-recommendation-enabled": False,
     "device-logging-option": "INFO",
 }
 
@@ -113,6 +107,25 @@ if configurations['device-logging-option'] == "INFO":
     logging.basicConfig(level=logging.INFO)
 elif configurations['device-logging-option'] == "DEBUG":
     logging.basicConfig(level=logging.DEBUG)
+elif configurations['device-logging-option'] == "WARNING":
+    logging.basicConfig(level=logging.WARNING)
+elif configurations['device-logging-option'] == "ERROR":
+    logging.basicConfig(level=logging.ERROR)
+else:
+    logging.basicConfig(level=logging.WARNING)
+
+# YouTube music player requirements
+if configurations['youtube-music-enabled']:
+    import pafy
+    import vlc
+
+# Face emotion detection requirements
+if configurations['face-emotion-detection-enabled']:
+    import face_emotion_detection
+
+# Reverse search API wrapper module
+if configurations['style-recommendation-enabled']:
+    import reverse_image_api_wrapper
 
 dataManagerInitListener.setInitialized('readDeviceConfig')
 
@@ -297,6 +310,9 @@ class ScheduleDownloader:
         self.creds = creds
 
     def download(self, targetDate):
+        if not configurations['google-drive-enabled']:
+            return []
+
         try:
             service = build('drive', 'v3', credentials=self.creds)
 
@@ -356,6 +372,9 @@ class SkinConditionUploader:
         self.creds = creds
 
     def upload(self, targetData, targetDate):
+        if not configurations['google-drive-enabled']:
+            return False
+
         try:
             service = build('drive', 'v3', credentials=self.creds)
 
@@ -474,6 +493,9 @@ class StyleUploader:
         self.creds = creds
 
     def upload(self, targetData):
+        if not configurations['google-drive-enabled']:
+            return False
+
         try:
             service = build('drive', 'v3', credentials=self.creds)
 
@@ -772,6 +794,9 @@ class YouTubeMusicManager:
     INVALID = 3
 
     def __init__(self) -> None:
+        if not configurations['youtube-music-enabled']:
+            return
+
         global creds
         self.creds = creds
         self.nextPageToken = None
@@ -804,6 +829,8 @@ class YouTubeMusicManager:
         self.binded = []
 
     def searchByEmotion(self):
+        if not configurations['youtube-music-enabled']:
+            return 'invalid'
         if not configurations['face-emotion-detection-enabled']:
             return 'invalid'
         
@@ -829,6 +856,9 @@ class YouTubeMusicManager:
         return pref_result
     
     def search(self, query=None, cnt=5, nextpage=False):
+        if not configurations['youtube-music-enabled']:
+            return
+
         try:
             if not self.isStopped():
                 self.pause()
@@ -874,6 +904,9 @@ class YouTubeMusicManager:
             logging.error(f'[YOUTUBE MUSIC] Error occurred on searching with query({query}): {error}')
     
     def setPlayer(self, videoId):
+        if not configurations['youtube-music-enabled']:
+            return
+
         self.state.edit(YouTubeMusicManager.LOADING)
         self._ready = False
  
@@ -889,6 +922,9 @@ class YouTubeMusicManager:
         self._ready = True
     
     def moveNext(self):
+        if not configurations['youtube-music-enabled']:
+            return
+
         # self.state.edit(YouTubeMusicManager.LOADING)
         self.player.pause()
 
@@ -907,6 +943,9 @@ class YouTubeMusicManager:
             self.moveNext()
 
     def movePrev(self):
+        if not configurations['youtube-music-enabled']:
+            return
+
         # self.state.edit(YouTubeMusicManager.LOADING)
         self.player.pause()
             
@@ -926,9 +965,15 @@ class YouTubeMusicManager:
     
     @vlc.callbackmethod
     def autoMoveNext(self, data):
+        if not configurations['youtube-music-enabled']:
+            return
+
         gobject.idle_add(self.moveNext)
 
     def play(self):
+        if not configurations['youtube-music-enabled']:
+            return
+
         # self.state.edit(YouTubeMusicManager.LOADING)
         try:
             if not self._ready:
@@ -950,11 +995,17 @@ class YouTubeMusicManager:
             self.play()
 
     def pause(self):
+        if not configurations['youtube-music-enabled']:
+            return
+
         if self.player.get_state() != vlc.State.Paused:
             self.player.pause()
             self.state.edit(YouTubeMusicManager.STOPPED)
 
     def bindCallback(self, method, *args):
+        if not configurations['youtube-music-enabled']:
+            return
+
         self.state.bind(method, *args)
         
     def isStopped(self):
