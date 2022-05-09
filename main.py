@@ -527,7 +527,7 @@ class MyApp(QWidget):
                                 "\n"
                                 "")
         barWidget.setTextVisible(False)
-        self.progressbarWidget.setValue(100)
+        barWidget.setValue(100)
         return barWidget
 
     def generateMusicPlayerWidget(self):
