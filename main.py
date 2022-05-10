@@ -309,7 +309,7 @@ class SidebarModule:
     def initWindow(self):
         self.widget = QGroupBox()
         mainlayout = QVBoxLayout()
-        mainlayout.addStretch(1)
+        # mainlayout.addStretch(1)
 
         for idx in range(4):
             button = QPushButton()
@@ -320,7 +320,9 @@ class SidebarModule:
             self.buttons.append(button)
 
             mainlayout.addWidget(button)
-            mainlayout.addStretch(1)
+            # mainlayout.addStretch(1)
+            if idx < 3:
+                mainlayout.addStretch(1)
 
         self.widget.setLayout(mainlayout)
 
