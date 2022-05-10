@@ -310,11 +310,10 @@ class SidebarModule:
         self.widget = QGroupBox()
         mainlayout = QVBoxLayout()
         # mainlayout.addStretch(1)
-        self.widget.setStyleSheet('border-style: none')
 
         for idx in range(4):
             button = QPushButton()
-            # button.setStyleSheet(f'border-style: none')
+            button.setStyleSheet(f'border-style: none')
             button.clicked.connect(functools.partial(self.trigger, idx))
             button.setIcon(QIcon(SidebarModule.configs[self.mode][idx].icon_url))
             button.setIconSize(QtCore.QSize(20, 20))
@@ -326,6 +325,7 @@ class SidebarModule:
                 mainlayout.addStretch(1)
 
         self.widget.setLayout(mainlayout)
+        self.widget.setStyleSheet('border-style: none')
 
     def changeMode(self, nxt_mode):
         if nxt_mode not in SidebarModule.configs.keys():
