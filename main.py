@@ -546,7 +546,7 @@ class MyApp(QWidget):
 
     def generateSidebarWidget(self):
         groupbox = self.sidebarModule.widget
-        groupbox.setFixedHeight(200)
+        groupbox.setFixedHeight(240)
         groupbox.setFixedWidth(50)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
