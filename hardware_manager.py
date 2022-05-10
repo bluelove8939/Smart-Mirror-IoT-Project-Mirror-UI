@@ -93,10 +93,10 @@ class MoistureManager:
 #   It uses 7, 11, 13, 15 pin by default
 
 class ButtonManager:
-    BUTTON0 = 7   # pin number 7  is assigned as button1
-    BUTTON1 = 11  # pin number 11 is assigned as button2
-    BUTTON2 = 13  # pin number 13 is assigned as button3
-    BUTTON3 = 15  # pin number 15 is assigned as button4
+    BUTTON0 = 7   # pin number 7  is assigned as button0
+    BUTTON1 = 11  # pin number 11 is assigned as button1
+    BUTTON2 = 13  # pin number 13 is assigned as button2
+    BUTTON3 = 15  # pin number 15 is assigned as button3
     BUTTON_TYPES = (BUTTON0, BUTTON1, BUTTON2, BUTTON3,)
 
     def __init__(self):
@@ -148,11 +148,11 @@ class ButtonManager:
 
 
 class AudioManager:
-    def __init__(self, callbacks=None) -> None:
+    def __init__(self) -> None:
         self.mixer = alsaaudio.Mixer()
         self.mixer.setvolume(70)
         self.current_volume = self.mixer.getvolume()[0]
-        self.callbacks = [] if callbacks is None else list(callbacks[:])
+        self.callbacks = []
 
     def bind(self, method, *args):
         self.callbacks.append((method, args))

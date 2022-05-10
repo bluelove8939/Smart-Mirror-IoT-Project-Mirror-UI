@@ -148,19 +148,20 @@ class BluetoothThread(QThread):
 #   Youtube music player module including manager and widget
 
 class MusicPlayerModule(object):
-    def __init__(self, parent=None, callbacks=[]) -> None:
+    def __init__(self, parent=None) -> None:
         self.parent = parent
         self.manager = YouTubeMusicManager()
 
         self.widget = None
         self.manager.bindCallback(self.refresh)
-        for method in callbacks:
-            self.manager.bindCallback(method)
         self.title_widget = None
         self.play_button_widget = None
         self.play_button_signal_connected = False
 
         self.drawWindow()
+
+    def bind(self, method, *args):
+        self.manager.bindCallback(method, *args)
 
     def disconnectPlayButtonSignal(self):
         if self.play_button_signal_connected:
@@ -386,16 +387,20 @@ class MyApp(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Global variables
+        # Global modules
         self.refreshedTime = QTime.currentTime()
         self.weatherDownloader = WeatherDownloader()
         self.scheduleDownloader = ScheduleDownloader()
-        self.musicPlayerModule = MusicPlayerModule(callbacks=[self.autoSendMetadata])
+        self.musicPlayerModule = MusicPlayerModule()
         self.sidebarModule = SidebarModule(parent=self)
         self.moistureModule = MoistureManager()
-        self.audioModule = AudioManager(callbacks=[self.autoSendMetadata])
+        self.audioModule = AudioManager()
         self.skinConditionUploader = SkinConditionUploader()
         self.styleRecommendationManager = StyleRecommendationManager()
+
+        # Bind callbacks to modules
+        self.musicPlayerModule.bind(self.autoSendMetadata)
+        self.audioModule.bind(self.autoSendMetadata)
 
         # Window Settings
         self.setWindowTitle('Smart Mirror System')
