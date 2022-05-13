@@ -145,6 +145,7 @@ class ButtonManager:
             if GPIO.input(pinnum) == 1:
                 method, args = self._pin_callback_mappings[pinnum]
                 method(*args)
+                break
 
 
 class AudioManager:

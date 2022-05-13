@@ -792,9 +792,8 @@ class MyApp(QWidget):
             self.assistantMsgLabel.setText(token['args'][0])
 
         elif token['type'] == 'play_music_by_emotion':
-            # alertDialog = AlertDialog(title='표정 분석', msg='표정 분석을 위해 얼굴을 비추세요', timeout=3, parent=self)
-            # alertDialog.exec_()
-            self.assistantMsgLabel.setText('표정 분석을 위해 얼굴을 비추세요')
+            alertDialog = AlertDialog(title='표정 분석', msg='표정 분석을 위해 얼굴을 비추세요', timeout=3, parent=self)
+            alertDialog.exec_()
 
             self.progressbarWidget.setValue(0)
 
@@ -810,10 +809,8 @@ class MyApp(QWidget):
 
             self.progressbarWidget.setValue(100)
 
-            # alertDialog = AlertDialog(title='표정 분석', msg=msg, timeout=5, parent=self)
-            # alertDialog.exec_()
-            self.assistantMsgLabel.setText(msg)
-
+            alertDialog = AlertDialog(title='표정 분석', msg=msg, timeout=5, parent=self)
+            alertDialog.exec_()
 
         elif token['type'] == 'moisture':
             msg = ""
