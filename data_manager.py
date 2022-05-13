@@ -222,7 +222,7 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath, remove_existing_c
 
 # Check Wifi connection
 while not checkWifiConnection():
-    input('f"Connect to Wifi network and press Enter..."')
+    input("Connect to Wifi network and press Enter...")
 
 # User account authentication process
 google_scope = []

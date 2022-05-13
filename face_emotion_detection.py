@@ -37,7 +37,7 @@ class MirrorFaceDetect:
     def __init__(self, face_apikey, face_api_endpoint):
         self.face_api = azure_api_wrapper.AzureFaceApi(apikey=face_apikey, endpoint=face_api_endpoint)
 
-    def detect_motion_webcam(self):
+    def detect_motion_webcam(self, max_iter=1000):
         # initialize variable in Json format, to return exception string
         j = json.loads('{}')
         
@@ -57,8 +57,12 @@ class MirrorFaceDetect:
         # if PIR == 0:
         #     time.sleep(1)
         #     continue
+
+        iter_cnt = 0
         
-        while True:
+        while iter_cnt < max_iter:
+            iter_cnt += 1
+
             # check if time is exceeded, so that camera is not running over 60 seconds
             # if PIR sensor is available, this feature is now useful
             if time.time() - self.stamp > 60:
