@@ -453,8 +453,8 @@ class MyApp(QWidget):
         self.mainLayout = None
         self.drawWindow()  # generate main layout and set widget layout as main layout
 
-        # self.showFullScreen()
-        self.show()
+        self.showFullScreen()
+        # self.show()
 
     def drawWindow(self):
         # Required widget
