@@ -397,6 +397,9 @@ class MyApp(QWidget):
     def __init__(self):
         super().__init__()
 
+        # Global variables
+        self.actionValid = True  # take action validity flag
+
         # Global modules
         self.refreshedTime = QTime.currentTime()
         self.weatherDownloader = WeatherDownloader()
@@ -436,7 +439,7 @@ class MyApp(QWidget):
         self.bluetoothThread.start()
         self.bluetoothThread.threadEvent.connect(self.takeAction)
 
-        # [TEST] Run assistant thread
+        # Run assistant thread
         self.assistantThread = AssistantThread()
         self.assistantThread.start()
         self.assistantThread.threadEvent.connect(self.takeAction)
@@ -758,7 +761,10 @@ class MyApp(QWidget):
         self.takeAction(token)
 
     def takeAction(self, token):
-        print("takeaction called")
+        if not self.actionValid:
+            return
+        self.actionValid = False
+
         if token['type'] == 'set_location':
             changeSettings('lat', token['args'][0])
             changeSettings('lon', token['args'][1])
@@ -903,6 +909,8 @@ class MyApp(QWidget):
 
         elif token['type'] == 'vlc_volume_down':
             self.musicPlayerModule.manager.volumeDown()
+
+        self.actionValid = True
 
 
 if __name__ == '__main__':
