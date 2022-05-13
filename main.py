@@ -812,7 +812,7 @@ class MyApp(QWidget):
 
             # alertDialog = AlertDialog(title='표정 분석', msg=msg, timeout=5, parent=self)
             # alertDialog.exec_()
-            self.assistantMsgLabel.setText('표정 분석을 위해 얼굴을 비추세요')
+            self.assistantMsgLabel.setText(msg)
 
 
         elif token['type'] == 'moisture':
