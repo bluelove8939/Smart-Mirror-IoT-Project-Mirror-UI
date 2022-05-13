@@ -453,8 +453,8 @@ class MyApp(QWidget):
         self.mainLayout = None
         self.drawWindow()  # generate main layout and set widget layout as main layout
 
-        self.showFullScreen()
-        # self.show()
+        # self.showFullScreen()
+        self.show()
 
     def drawWindow(self):
         # Required widget
@@ -751,6 +751,7 @@ class MyApp(QWidget):
         self.takeAction(token)
 
     def takeAction(self, token):
+        print("takeaction called")
         if token['type'] == 'set_location':
             changeSettings('lat', token['args'][0])
             changeSettings('lon', token['args'][1])
