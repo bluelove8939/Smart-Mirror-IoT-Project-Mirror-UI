@@ -37,7 +37,7 @@ class MirrorFaceDetect:
     def __init__(self, face_apikey, face_api_endpoint):
         self.face_api = azure_api_wrapper.AzureFaceApi(apikey=face_apikey, endpoint=face_api_endpoint)
 
-    def detect_motion_webcam(self, max_iter=1000):
+    def detect_motion_webcam(self, max_iter=100):
         # initialize variable in Json format, to return exception string
         j = json.loads('{}')
         
