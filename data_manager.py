@@ -5,6 +5,7 @@ import json
 import os.path
 import logging
 import datetime
+import subprocess
 import cv2
 
 from gi.repository import GObject as gobject
@@ -165,6 +166,19 @@ def getSettings(name):
 dataManagerInitListener.setInitialized('readSettings')
 
 
+# Wifi connection checker
+
+def checkWifiConnection():
+    ps = subprocess.Popen(['iwgetid'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    try:
+        output = subprocess.check_output(('grep', 'ESSID'), stdin=ps.stdout)
+        logging.info(f"[WIFI CONNECTION] Connection: {output}")
+    except subprocess.CalledProcessError:
+        logging.info(f"[WIFI CONNECTION] Connection invalid")
+        return False
+    return True
+
+
 # Google login function
 #
 # Note:
@@ -205,6 +219,10 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath, remove_existing_c
 #   Login to google and generate user token for accessing private information
 #   This login process includes user account login and google assistant authentication
 #   (Processed by different browser window) 
+
+# Check Wifi connection
+while not checkWifiConnection():
+    input('f"Connect to Wifi network and press Enter..."')
 
 # User account authentication process
 google_scope = []
