@@ -3,7 +3,7 @@ import os
 import sys
 import functools
 import datetime
-import time
+from gi.repository import GObject as gobject
 
 from PyQt5 import sip
 from PyQt5.QtWidgets import QApplication, QWidget
@@ -350,10 +350,17 @@ class SidebarModule:
         elif targetToken.name == 'settings':
             self.changeMode(SidebarModule.MODE_SETTINGS)
 
-        self.parent.takeAction(token={
+        actionToken = {
             'type': targetToken.name,
             'args': targetToken.args,
-        })
+        }
+
+        gobject.idle_add(functools.partial(self.parent.takeAction, actionToken))
+
+        # self.parent.takeAction(token={
+        #     'type': targetToken.name,
+        #     'args': targetToken.args,
+        # })
 
 
 class AlertDialog(QMessageBox):
