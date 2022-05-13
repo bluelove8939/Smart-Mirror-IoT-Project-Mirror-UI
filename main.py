@@ -792,8 +792,8 @@ class MyApp(QWidget):
             self.assistantMsgLabel.setText(token['args'][0])
 
         elif token['type'] == 'play_music_by_emotion':
-            alertDialog = AlertDialog(title='표정 분석', msg='표정 분석을 위해 얼굴을 비추세요', timeout=3, parent=self)
-            alertDialog.exec_()
+            # alertDialog = AlertDialog(title='표정 분석', msg='표정 분석을 위해 얼굴을 비추세요', timeout=3, parent=self)
+            # alertDialog.exec_()
 
             self.progressbarWidget.setValue(0)
 
@@ -809,8 +809,8 @@ class MyApp(QWidget):
 
             self.progressbarWidget.setValue(100)
 
-            alertDialog = AlertDialog(title='표정 분석', msg=msg, timeout=5, parent=self)
-            alertDialog.exec_()
+            # alertDialog = AlertDialog(title='표정 분석', msg=msg, timeout=5, parent=self)
+            # alertDialog.exec_()
 
         elif token['type'] == 'moisture':
             msg = ""
@@ -818,8 +818,8 @@ class MyApp(QWidget):
             error_flag = False
             median_value = -1
 
-            alertDialog = AlertDialog(title='피부 상태 분석', msg='피부 상태 분석을 위해 센서를 피부와 접촉하세요', timeout=3, parent=self)
-            alertDialog.exec_()
+            # alertDialog = AlertDialog(title='피부 상태 분석', msg='피부 상태 분석을 위해 센서를 피부와 접촉하세요', timeout=3, parent=self)
+            # alertDialog.exec_()
 
             self.progressbarWidget.setValue(0)
 
@@ -843,15 +843,15 @@ class MyApp(QWidget):
 
             self.progressbarWidget.setValue(100)
 
-            alertDialog = AlertDialog(title='피부 수분측정', msg=msg, timeout=5, parent=self)
-            alertDialog.exec_()
+            # alertDialog = AlertDialog(title='피부 수분측정', msg=msg, timeout=5, parent=self)
+            # alertDialog.exec_()
 
         elif token['type'] == 'style':
             msg = ""
             results = None
 
-            alertDialog = AlertDialog(title='스타일 분석', msg='스타일 분석을 위해 전신을 비추세요\n창이 닫히면 스타일을 특정합니다', timeout=5, parent=self)
-            alertDialog.exec_()
+            # alertDialog = AlertDialog(title='스타일 분석', msg='스타일 분석을 위해 전신을 비추세요\n창이 닫히면 스타일을 특정합니다', timeout=5, parent=self)
+            # alertDialog.exec_()
             self.progressbarWidget.setValue(0)
 
             try:
@@ -866,8 +866,8 @@ class MyApp(QWidget):
                 msg = "분석 중 심각한 오류가 발생하였습니다.\n카메라가 제대로 동작하고 있는지 확인하세요."
 
             self.progressbarWidget.setValue(100)
-            alertDialog = AlertDialog(title='스타일 분석', msg=msg, timeout=5, parent=self)
-            alertDialog.exec_()
+            # alertDialog = AlertDialog(title='스타일 분석', msg=msg, timeout=5, parent=self)
+            # alertDialog.exec_()
         
         elif token['type'] == 'assistant':
             self.assistantThread.trigger()

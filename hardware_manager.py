@@ -141,7 +141,7 @@ class ButtonManager:
         logging.info(f"[BUTTON MANAGER] Default callback called: args({args})")
 
     def buttonCallback(self, channel):
-        for button_idx, pinnum in enumerate(ButtonManager.BUTTON_TYPES):
+        for pinnum in ButtonManager.BUTTON_TYPES:
             if GPIO.input(pinnum) == 1:
                 method, args = self._pin_callback_mappings[pinnum]
                 method(*args)
