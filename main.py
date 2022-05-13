@@ -767,7 +767,16 @@ class MyApp(QWidget):
             self.refresh()
         
         elif token['type'] == 'refresh':
-            self.refresh()
+            # self.refresh()
+            self.progressbarWidget.setValue(0)
+            self.refreshedTime = QTime.currentTime()
+            self.progressbarWidget.setValue(10)
+            self.deleteLayout(self.mainLayout)  # remove main layout
+            self.progressbarWidget.setValue(50)
+            self.drawWindow()  # regenerate main layout and set widget layout as main layout
+
+            alertDialog = AlertDialog(title='새로고침', msg='화면이 새로고침 되었습니다', timeout=3, parent=self)
+            alertDialog.exec_()
 
         elif token['type'] == 'refresh_assistant':
             self.refresh()
@@ -811,7 +820,7 @@ class MyApp(QWidget):
             self.progressbarWidget.setValue(50)
             msg = "표정 분석에 실패했습니다"
 
-            if result_valid:
+            if result_valid and result_valid != 'invalid':
                 self.musicPlayerModule.manager.play()
                 msg=f"현재 감정 상태: {result_valid}\n적절한 음악을 재생합니다"
 
