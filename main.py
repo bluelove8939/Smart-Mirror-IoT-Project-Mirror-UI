@@ -793,6 +793,9 @@ class MyApp(QWidget):
             self.refresh()
 
         elif token['type'] == 'music_autoplay':
+            if len(token['args']) > 0:
+                self.assistantMsgLabel.setText(token['args'][0])
+
             if not self.musicPlayerModule.manager.isInvalid():
                 if not self.musicPlayerModule.manager.isStopped():
                     self.musicPlayerModule.manager.pause()
@@ -800,10 +803,16 @@ class MyApp(QWidget):
                     self.musicPlayerModule.manager.play()
         
         elif token['type'] == 'music_next':
+            if len(token['args']) > 0:
+                self.assistantMsgLabel.setText(token['args'][0])
+
             if not self.musicPlayerModule.manager.isInvalid():
                 self.musicPlayerModule.manager.moveNext()
         
         elif token['type'] == 'music_prev':
+            if len(token['args']) > 0:
+                self.assistantMsgLabel.setText(token['args'][0])
+
             if not self.musicPlayerModule.manager.isInvalid():
                 self.musicPlayerModule.manager.movePrev()
 

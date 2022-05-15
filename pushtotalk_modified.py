@@ -84,7 +84,33 @@ def remove_vacancy_from_string(targetString):
     return ''.join(processedString)
 
 predefined_tokens = {
+    # Refreshing device
+    '새로고침': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
+    '새로고침해': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
+    '새로고침해줘': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
+    '화면새로고침': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
+    '화면새로고침해': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
     '화면새로고침해줘': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
+
+    # Music auto play
+    '노래틀어': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+    '음악틀어': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+    '노래재생': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+    '음악재생': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+    '노래재생해': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+    '음악재생해': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+    '노래틀어줘': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+    '음악틀어줘': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+    '노래재생해줘': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+    '음악재생해줘': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+
+    # Next and previous music
+    '다음곡': ActionToken(name='music_next', args=['다음 곡을 재생합니다']),
+    '다음곡틀어': ActionToken(name='music_next', args=['다음 곡을 재생합니다']),
+    '다음곡틀어줘': ActionToken(name='music_next', args=['다음 곡을 재생합니다']),
+    '이전곡': ActionToken(name='music_prev', args=['이전 곡을 재생합니다']),
+    '이전곡틀어': ActionToken(name='music_prev', args=['이전 곡을 재생합니다']),
+    '이전곡틀어줘': ActionToken(name='music_prev', args=['이전 곡을 재생합니다']),
 
     # Play music by keywords
     '{}노래틀어': ActionToken(name='play_music_by_keyword', args=['유튜브에서 음악을 재생합니다']),
