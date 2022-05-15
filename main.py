@@ -801,6 +801,22 @@ class MyApp(QWidget):
                     self.musicPlayerModule.manager.pause()
                 else:
                     self.musicPlayerModule.manager.play()
+
+        elif token['type'] == 'music_force_play':
+            if self.musicPlayerModule.manager.isInvalid():
+                self.assistantMsgLabel.setText('음악을 재생할 수 없습니다')
+            else:
+                if len(token['args']) > 0:
+                    self.assistantMsgLabel.setText(token['args'][0])
+                self.musicPlayerModule.manager.play()
+
+        elif token['type'] == 'music_force_pause':
+            if self.musicPlayerModule.manager.isInvalid():
+                self.assistantMsgLabel.setText('음악을 재생할 수 없습니다')
+            else:
+                if len(token['args']) > 0:
+                    self.assistantMsgLabel.setText(token['args'][0])
+                self.musicPlayerModule.manager.pause()
         
         elif token['type'] == 'music_next':
             if len(token['args']) > 0:

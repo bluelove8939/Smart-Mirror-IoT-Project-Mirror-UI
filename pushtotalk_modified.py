@@ -92,17 +92,28 @@ predefined_tokens = {
     '화면새로고침해': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
     '화면새로고침해줘': ActionToken(name='refresh_assistant', args=['화면을 새로고침 합니다']),
 
-    # Music auto play
-    '노래틀어': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
-    '음악틀어': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
-    '노래재생': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
-    '음악재생': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
-    '노래재생해': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
-    '음악재생해': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
-    '노래틀어줘': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
-    '음악틀어줘': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
-    '노래재생해줘': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
-    '음악재생해줘': ActionToken(name='music_autoplay', args=['음악을 재생합니다']),
+    # Music play
+    '노래틀어': ActionToken(name='music_force_play', args=['음악을 재생합니다']),
+    '음악틀어': ActionToken(name='music_force_play', args=['음악을 재생합니다']),
+    '노래재생': ActionToken(name='music_force_play', args=['음악을 재생합니다']),
+    '음악재생': ActionToken(name='music_force_play', args=['음악을 재생합니다']),
+    '노래재생해': ActionToken(name='music_force_play', args=['음악을 재생합니다']),
+    '음악재생해': ActionToken(name='music_force_play', args=['음악을 재생합니다']),
+    '노래틀어줘': ActionToken(name='music_force_play', args=['음악을 재생합니다']),
+    '음악틀어줘': ActionToken(name='music_force_play', args=['음악을 재생합니다']),
+    '노래재생해줘': ActionToken(name='music_force_play', args=['음악을 재생합니다']),
+    '음악재생해줘': ActionToken(name='music_force_play', args=['음악을 재생합니다']),
+
+    # Music pause
+    '일시정지': ActionToken(name='music_force_pause', args=['음악을 일시정지합니다']),
+    '일시정지해': ActionToken(name='music_force_pause', args=['음악을 일시정지합니다']),
+    '일시정지해줘': ActionToken(name='music_force_pause', args=['음악을 일시정지합니다']),
+    '음악일시정지': ActionToken(name='music_force_pause', args=['음악을 일시정지합니다']),
+    '음악일시정지해': ActionToken(name='music_force_pause', args=['음악을 일시정지합니다']),
+    '음악일시정지해줘': ActionToken(name='music_force_pause', args=['음악을 일시정지합니다']),
+    '노래일시정지': ActionToken(name='music_force_pause', args=['음악을 일시정지합니다']),
+    '노래일시정지해': ActionToken(name='music_force_pause', args=['음악을 일시정지합니다']),
+    '노래일시정지해줘': ActionToken(name='music_force_pause', args=['음악을 일시정지합니다']),
 
     # Next and previous music
     '다음곡': ActionToken(name='music_next', args=['다음 곡을 재생합니다']),
