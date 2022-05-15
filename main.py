@@ -815,6 +815,9 @@ class MyApp(QWidget):
             self.assistantMsgLabel.setText(token['args'][0])
 
         elif token['type'] == 'play_music_by_emotion':
+            if len(token['args']) > 0:
+                self.assistantMsgLabel.setText(token['args'][0])
+
             alertDialog = AlertDialog(title='표정 분석', msg='표정 분석을 위해 얼굴을 비추세요', timeout=3, parent=self)
             alertDialog.exec_()
 
@@ -840,6 +843,9 @@ class MyApp(QWidget):
             measured_results = []
             error_flag = False
             median_value = -1
+
+            if len(token['args']) > 0:
+                self.assistantMsgLabel.setText(token['args'][0])
 
             alertDialog = AlertDialog(title='피부 상태 분석', msg='피부 상태 분석을 위해 센서를 피부와 접촉하세요', timeout=3, parent=self)
             alertDialog.exec_()
@@ -872,6 +878,9 @@ class MyApp(QWidget):
         elif token['type'] == 'style':
             msg = ""
             results = None
+
+            if len(token['args']) > 0:
+                self.assistantMsgLabel.setText(token['args'][0])
 
             alertDialog = AlertDialog(title='스타일 분석', msg='스타일 분석을 위해 전신을 비추세요\n창이 닫히면 스타일을 특정합니다', timeout=5, parent=self)
             alertDialog.exec_()

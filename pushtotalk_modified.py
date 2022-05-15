@@ -109,6 +109,19 @@ predefined_tokens = {
     '표정인식해서노래재생해': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
     '표정인식해서음악재생해줘': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
     '표정인식해서노래재생해줘': ActionToken(name='play_music_by_emotion', args=['표정을 인식해서 음악을 재생합니다']),
+
+    # Skin condition measuring
+    '피부측정': ActionToken(name='moisture', args=['피부 상태를 측정합니다']),
+    '피부측정해': ActionToken(name='moisture', args=['피부 상태를 측정합니다']),
+    '피부측정해줘': ActionToken(name='moisture', args=['피부 상태를 측정합니다']),
+    '피부상태측정': ActionToken(name='moisture', args=['피부 상태를 측정합니다']),
+    '피부상태측정해': ActionToken(name='moisture', args=['피부 상태를 측정합니다']),
+    '피부상태측정해줘': ActionToken(name='moisture', args=['피부 상태를 측정합니다']),
+
+    # Style recommendation
+    '스타일추천': ActionToken(name='style', args=['스타일을 추천합니다']),
+    '스타일추천해': ActionToken(name='style', args=['스타일을 추천합니다']),
+    '스타일추천해줘': ActionToken(name='style', args=['스타일을 추천합니다']),
 }
 
 def get_predefined_token(targetString):
