@@ -205,6 +205,11 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath, remove_existing_c
             try:
                 creds.refresh(Request())
             except:
+                if remove_existing_cred:
+                    if os.path.exists(savepath):
+                        logging.info(f'[GOOGLE OAUTH2] Removing existing authenticated token at {savepath}')
+                        os.remove(savepath)
+
                 logging.error('[GOOGLE OAUTH2] Exception occurred on refreshing token: reinstalling token')
                 flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
                 creds = flow.run_local_server()
