@@ -188,26 +188,33 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath, remove_existing_c
     creds = None
     error_flag = False
 
-    # if remove_existing_cred:
-    #     if os.path.exists(savepath):
-    #         os.remove(savepath)
+    if remove_existing_cred:
+        if os.path.exists(savepath):
+            logging.info(f'[GOOGLE OAUTH2] Removing existing authenticated token at {savepath}')
+            os.remove(savepath)
 
     if os.path.exists(savepath):
         try:
+            logging.info(f'[GOOGLE OAUTH2] Making credentials by using token at {savepath}')
             creds = Credentials.from_authorized_user_file(savepath, scopes)
         except:
             error_flag = True
     if error_flag or creds is None or (creds is not None and (not creds.valid or creds.expired)):
+        logging.info(f'[GOOGLE OAUTH2] Cannot find token file or error occurred on using token file')
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
             except:
+                logging.error('[GOOGLE OAUTH2] Exception occurred on refreshing token: reinstalling token')
                 flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
                 creds = flow.run_local_server()
         else:
+            logging.info(f'[GOOGLE OAUTH2] Generating new token: follow the instruction at the browser')
             flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
             creds = flow.run_local_server()
+
     with open(savepath, 'w') as savefile:
+        logging.info(f'[GOOGLE OAUTH2] Installing generated credentials')
         savefile.write(creds.to_json())
 
     return creds
