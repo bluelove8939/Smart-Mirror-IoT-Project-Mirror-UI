@@ -212,15 +212,17 @@ def makeCredentialFromClientfile(clientfile, scopes, savepath, remove_existing_c
 
                 logging.info('[GOOGLE OAUTH2] Generating new token: follow the instruction at the browser')
                 flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
-                creds = flow.run_local_server(port=8888, success_message=None)
+                creds = flow.run_local_server(port=8888)
         else:
             logging.info(f'[GOOGLE OAUTH2] Generating new token: follow the instruction at the browser')
             flow = InstalledAppFlow.from_client_secrets_file(clientfile, scopes)
-            creds = flow.run_local_server(port=8888, success_message=None)
+            creds = flow.run_local_server(port=8888)
 
     with open(savepath, 'w') as savefile:
         logging.info(f'[GOOGLE OAUTH2] Installing generated credentials')
         savefile.write(creds.to_json())
+
+    logging.info(f'[GOOGLE OAUTH2] Credentials are successfully installed at {savepath}')
 
     return creds
 

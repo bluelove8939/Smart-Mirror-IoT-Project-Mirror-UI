@@ -370,6 +370,9 @@ class SampleAssistant(object):
             yield embedded_assistant_pb2.AssistRequest(audio_in=data)
 
 
+print(os.path.join(click.get_app_dir('google-oauthlib-tool'),
+                                   'credentials.json'))
+
 @click.command()
 @click.option('--api-endpoint', default=ASSISTANT_API_ENDPOINT,
               metavar='<api endpoint>', show_default=True,
