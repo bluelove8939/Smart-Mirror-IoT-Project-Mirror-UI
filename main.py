@@ -883,7 +883,7 @@ class MyApp(QWidget):
                 measured_results.sort()
                 median_value = measured_results[len(measured_results) // 2]
                 cached_value = median_value
-                median_value = (median_value - 24) * 3
+                median_value = int((median_value - 24) * 4)
                 if median_value < 0:   median_value = 0
                 if median_value > 100: median_value = 100
                 self.progressbarWidget.setValue(50)
