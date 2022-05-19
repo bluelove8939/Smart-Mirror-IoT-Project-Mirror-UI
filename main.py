@@ -882,11 +882,12 @@ class MyApp(QWidget):
                 self.progressbarWidget.setValue(30)
                 measured_results.sort()
                 median_value = measured_results[len(measured_results) // 2]
-                median_value = (median_value - 24) * 2.5
+                cached_value = median_value
+                median_value = (median_value - 24) * 3
                 if median_value < 0:   median_value = 0
                 if median_value > 100: median_value = 100
                 self.progressbarWidget.setValue(50)
-                msg = f"측정된 결과는 다음과 같습니다: {median_value}"
+                msg = f"측정된 결과는 다음과 같습니다: {median_value}, {cached_value}"
                 # msg = f"측정된 결과는 {measured_results}"
                 if len(measured_results) < 4:
                     msg += '\n경고: 결과값이 부족하여 측정된 결과가 정확하지 않을 수 있습니다.'
