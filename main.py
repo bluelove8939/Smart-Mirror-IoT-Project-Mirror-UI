@@ -399,6 +399,8 @@ class MyApp(QWidget):
 
         # Global variables
         self.actionValid = True  # take action validity flag
+        self.cachedWeather = None
+        self.cachedSchedule = None
 
         # Global modules
         self.refreshedTime = QTime.currentTime()
@@ -593,8 +595,9 @@ class MyApp(QWidget):
 
         try:
             scheduleDataList = self.scheduleDownloader.download(QDate.currentDate().toString('yyyy-MM-dd'))
+            self.cachedSchedule = scheduleDataList
         except:
-            scheduleDataList = []
+            scheduleDataList = self.cachedSchedule
 
         titleLabel = QLabel("일정" if len(scheduleDataList) > 0 else "일정을 추가하세요")
         titleLabel.setStyleSheet(labelDefaultStyleSheet + 
@@ -632,6 +635,10 @@ class MyApp(QWidget):
         # Download weather data
         try:
             weatherDataJson = self.weatherDownloader.download()
+            if not weatherDataJson['invalid']:
+                self.cachedWeather = weatherDataJson
+            else:
+                weatherDataJson = self.cachedWeather
         except:
             vbox = QVBoxLayout()
             vbox.addStretch(1)
