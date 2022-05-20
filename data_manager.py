@@ -289,17 +289,17 @@ class WeatherDownloader:
     def download(self):
         if not checkWifiConnection():
             logging.error(f'[WEATHER DOWNLOADER] Internet connection error')
-            return {'valid': False}
+            return {'valid': True}
 
         URL = f'http://api.openweathermap.org/data/2.5/weather?lat={self.lat}&lon={self.lon}&appid={self.apikey}&lang=kr&units=metric'
         response = requests.get(URL)
         if response.status_code == 200:
             ret = json.loads(response.text)
-            ret['valid'] = True
+            ret['valid'] = False
             return ret
         else:
             logging.error("[WEATHER DOWNLOADER] HTTP request error ocurred")
-            return {'valid': False}
+            return {'valid': True}
 
     def downloadWeatherIcon(self, iconId):  # download icon image from openweathermap api by using iconID
         if not checkWifiConnection():
