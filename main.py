@@ -635,7 +635,7 @@ class MyApp(QWidget):
         # Download weather data
         try:
             weatherDataJson = self.weatherDownloader.download()
-            if not weatherDataJson['valid']:
+            if weatherDataJson['valid']:
                 self.cachedWeather = weatherDataJson
             else:
                 weatherDataJson = self.cachedWeather
