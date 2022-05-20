@@ -287,21 +287,32 @@ class WeatherDownloader:
         self.lon = applicationSettings['lon']
 
     def download(self):
+        if not checkWifiConnection():
+            logging.error(f'[WEATHER DOWNLOADER] Internet connection error')
+            return {'valid': False}
+
         URL = f'http://api.openweathermap.org/data/2.5/weather?lat={self.lat}&lon={self.lon}&appid={self.apikey}&lang=kr&units=metric'
         response = requests.get(URL)
         if response.status_code == 200:
             ret = json.loads(response.text)
+            ret['valid'] = True
             return ret
         else:
-            logging.error("[WEATHER DOWNLOADER] HTTP request error ocurred") 
+            logging.error("[WEATHER DOWNLOADER] HTTP request error ocurred")
+            return {'valid': False}
 
     def downloadWeatherIcon(self, iconId):  # download icon image from openweathermap api by using iconID
+        if not checkWifiConnection():
+            logging.error(f'[WEATHER DOWNLOADER] Internet connection error')
+            return False
+
         iconURL = f"http://openweathermap.org/img/wn/{iconId}@2x.png"
         response = requests.get(iconURL)
         if response.status_code == 200:
             return response.content  # return image itself
         else:
-            logging.error("[WEATHER DOWNLOADER] HTTP request error ocurred") 
+            logging.error("[WEATHER DOWNLOADER] HTTP request error ocurred")
+            return False
 
 
 # Google drive manager modules
@@ -343,6 +354,9 @@ class ScheduleDownloader:
 
     def download(self, targetDate):
         if not configurations['google-drive-enabled']:
+            return []
+        if not checkWifiConnection():
+            logging.error(f'[SCHEDULE DOWNLOADER] Internet connection error')
             return []
 
         try:
@@ -405,6 +419,9 @@ class SkinConditionUploader:
 
     def upload(self, targetData, targetDate):
         if not configurations['google-drive-enabled']:
+            return False
+        if not checkWifiConnection():
+            logging.error(f'[SKIN DATA UPLOADER] Internet connection error')
             return False
 
         try:
@@ -526,6 +543,9 @@ class StyleUploader:
 
     def upload(self, targetData):
         if not configurations['google-drive-enabled']:
+            return False
+        if not checkWifiConnection():
+            logging.error(f'[STYLE DATA UPLOADER] Internet connection error')
             return False
 
         try:
@@ -865,6 +885,9 @@ class YouTubeMusicManager:
             return 'invalid'
         if not configurations['face-emotion-detection-enabled']:
             return 'invalid'
+        if not checkWifiConnection():
+            logging.error(f'[YOUTUBE MUSIC] Internet connection error')
+            return 'invalid'
         
         emotion_result = faceEmotionDetectModule.detect_motion_webcam()
 
@@ -889,6 +912,9 @@ class YouTubeMusicManager:
     
     def search(self, query=None, cnt=5, nextpage=False):
         if not configurations['youtube-music-enabled']:
+            return
+        if not checkWifiConnection():
+            logging.error(f'[YOUTUBE MUSIC] Internet connection error')
             return
 
         try:
@@ -1111,6 +1137,10 @@ class StyleRecommendationManager:
             logging.error(f"[STYLE RECOMMENDATION] Error ocurred on searching: There aren't any image captured")
             return None
 
+        if not checkWifiConnection():
+            logging.error(f'[STYLE RECOMMENDATION] Internet connection error')
+            return None
+
         # go through API and get result
         logging.info(f'[STYLE RECOMMENDATION] Searching by image {self.user_style_filename}....')
         result = self.reverse_search_inst.search_by_local_image(self.user_style_filename)
@@ -1131,6 +1161,9 @@ class StyleRecommendationManager:
         if not configurations['style-recommendation-enabled']:
             logging.error(f"[STYLE RECOMMENDATION] Style recommendation is not enabled")
             return
+        if not checkWifiConnection():
+            logging.error(f'[STYLE RECOMMENDATION] Internet connection error')
+            return None
 
         if targetData is None:
             if self.cached_result is None:

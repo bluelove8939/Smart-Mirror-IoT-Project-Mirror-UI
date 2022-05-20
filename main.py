@@ -21,7 +21,7 @@ from PyQt5.QtGui import QIcon, QFont, QImage, QPixmap, QFontDatabase
 from data_manager import vlc
 from data_manager import dataManagerInitListener
 from data_manager import WeatherDownloader, ScheduleDownloader, BluetoothController, AssistantManager, YouTubeMusicManager, SkinConditionUploader, StyleRecommendationManager
-from data_manager import changeSettings, saveSettings, getSettings, weekDay, lastDay
+from data_manager import changeSettings, saveSettings, getSettings, weekDay, lastDay, checkWifiConnection
 
 from hardware_manager import MoistureManager, AudioManager, ButtonManager
 
