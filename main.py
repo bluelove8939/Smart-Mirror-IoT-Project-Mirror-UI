@@ -400,6 +400,7 @@ class MyApp(QWidget):
         # Global variables
         self.actionValid = True  # take action validity flag
         self.cachedWeather = None
+        self.cachedWeatherIconImg = None
         self.cachedSchedule = None
 
         # Global modules
@@ -664,7 +665,12 @@ class MyApp(QWidget):
 
         # Generate weather icon widget
         weatherIconImage = QImage()
-        weatherIconImage.loadFromData(self.weatherDownloader.downloadWeatherIcon(str(weatherDataJson.get('weather')[0].get('icon'))))
+        if checkWifiConnection():
+            weatherIconData = self.weatherDownloader.downloadWeatherIcon(str(weatherDataJson.get('weather')[0].get('icon')))
+            self.cachedWeatherIconImg = weatherIconData
+        else:
+            weatherIconData = self.cachedWeatherIconImg
+        weatherIconImage.loadFromData(weatherIconData)
         weatherIconPixmap = QPixmap(weatherIconImage)
         weatherIconPixmap.scaledToHeight(64)
         weatherIconwidget = QLabel()
