@@ -591,7 +591,10 @@ class MyApp(QWidget):
         groupbox.setFixedWidth(190)
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
-        scheduleDataList = self.scheduleDownloader.download(QDate.currentDate().toString('yyyy-MM-dd'))
+        try:
+            scheduleDataList = self.scheduleDownloader.download(QDate.currentDate().toString('yyyy-MM-dd'))
+        except:
+            scheduleDataList = []
 
         titleLabel = QLabel("일정" if len(scheduleDataList) > 0 else "일정을 추가하세요")
         titleLabel.setStyleSheet(labelDefaultStyleSheet + 
@@ -627,7 +630,23 @@ class MyApp(QWidget):
         groupbox.setStyleSheet(widgetDefaultStyleSheet)
 
         # Download weather data
-        weatherDataJson = self.weatherDownloader.download()
+        try:
+            weatherDataJson = self.weatherDownloader.download()
+        except:
+            vbox = QVBoxLayout()
+            vbox.addStretch(1)
+
+            hbox = QHBoxLayout()
+            warning_text = QLabel("날씨 데이터 다운로드에 문제가 발생하였습니다")
+            warning_text.setStyleSheet(labelDefaultStyleSheet + 'font-size: 10pt; font-weight: bold; color: white;')
+            hbox.addStretch(1)
+            hbox.addWidget(warning_text)
+            hbox.addStretch(1)
+
+            vbox.addLayout(hbox)
+            vbox.addStretch(1)
+            groupbox.setLayout(vbox)
+            return groupbox
 
         # Generate weather subwidgets
         cityNameWidget = QLabel(f"{str(weatherDataJson.get('name'))}")
