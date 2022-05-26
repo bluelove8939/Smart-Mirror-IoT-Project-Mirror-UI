@@ -168,13 +168,18 @@ dataManagerInitListener.setInitialized('readSettings')
 
 # Wifi connection checker
 
-def checkWifiConnection():
-    ps = subprocess.Popen(['iwgetid'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+def checkWifiConnection(url='https://www.google.com/', timeout=5):
     try:
-        output = subprocess.check_output(('grep', 'ESSID'), stdin=ps.stdout)
-        logging.info(f"[WIFI CONNECTION] Connection: {output}")
-    except subprocess.CalledProcessError:
-        logging.info(f"[WIFI CONNECTION] Connection invalid")
+        request = requests.get(url, timeout=timeout)
+        logging.info(f"[INTERNET CONNECTION] Connection valid")
+        try:
+            ps = subprocess.Popen(['iwgetid'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            output = subprocess.check_output(('grep', 'ESSID'), stdin=ps.stdout)
+            logging.info(f"[INTERNET CONNECTION] WiFi: {output}")
+        except subprocess.CalledProcessError:
+            logging.info(f"[INTERNET CONNECTION] WiFi not detected")
+    except (requests.ConnectionError, requests.Timeout) as exception:
+        logging.info(f"[INTERNET CONNECTION] Connection invalid {exception}")
         return False
     return True
 
