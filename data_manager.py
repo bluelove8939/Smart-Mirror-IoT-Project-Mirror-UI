@@ -166,7 +166,7 @@ def getSettings(name):
 dataManagerInitListener.setInitialized('readSettings')
 
 
-# Wifi connection checker
+# Internet connection checker
 
 def checkWifiConnection(url='https://www.google.com/', timeout=5):
     try:

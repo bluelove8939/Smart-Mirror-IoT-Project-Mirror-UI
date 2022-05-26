@@ -825,6 +825,11 @@ class MyApp(QWidget):
             self.refresh()
 
         elif token['type'] == 'music_autoplay':
+            if checkWifiConnection():
+                alertDialog = AlertDialog(title='인터넷 연결 장애', msg='인터넷 연결이 원활하지 않습니다', timeout=3, parent=self)
+                alertDialog.exec_()
+                return
+
             if len(token['args']) > 0:
                 self.assistantMsgLabel.setText(token['args'][0])
 
@@ -837,27 +842,57 @@ class MyApp(QWidget):
         elif token['type'] == 'music_force_play':
             if self.musicPlayerModule.manager.isInvalid():
                 self.assistantMsgLabel.setText('음악을 재생할 수 없습니다')
-            else:
-                if len(token['args']) > 0:
-                    self.assistantMsgLabel.setText(token['args'][0])
-                self.musicPlayerModule.manager.play()
+                return
+
+            if checkWifiConnection():
+                alertDialog = AlertDialog(title='인터넷 연결 장애', msg='인터넷 연결이 원활하지 않습니다', timeout=3, parent=self)
+                alertDialog.exec_()
+                return
+
+            if len(token['args']) > 0:
+                self.assistantMsgLabel.setText(token['args'][0])
+            self.musicPlayerModule.manager.play()
 
         elif token['type'] == 'music_force_pause':
             if self.musicPlayerModule.manager.isInvalid():
                 self.assistantMsgLabel.setText('음악을 재생할 수 없습니다')
-            else:
-                if len(token['args']) > 0:
-                    self.assistantMsgLabel.setText(token['args'][0])
-                self.musicPlayerModule.manager.pause()
-        
-        elif token['type'] == 'music_next':
+                return
+
             if len(token['args']) > 0:
                 self.assistantMsgLabel.setText(token['args'][0])
+            self.musicPlayerModule.manager.pause()
+        
+        elif token['type'] == 'music_next':
+            if self.musicPlayerModule.manager.isInvalid():
+                self.assistantMsgLabel.setText('음악을 재생할 수 없습니다')
+                return
+
+            if checkWifiConnection():
+                alertDialog = AlertDialog(title='인터넷 연결 장애', msg='인터넷 연결이 원활하지 않습니다', timeout=3, parent=self)
+                alertDialog.exec_()
+                return
+
+            if len(token['args']) > 0:
+                self.assistantMsgLabel.setText(token['args'][0])
+
+            if checkWifiConnection():
+                alertDialog = AlertDialog(title='인터넷 연결 장애', msg='인터넷 연결이 원활하지 않습니다', timeout=3, parent=self)
+                alertDialog.exec_()
+                return
 
             if not self.musicPlayerModule.manager.isInvalid():
                 self.musicPlayerModule.manager.moveNext()
         
         elif token['type'] == 'music_prev':
+            if self.musicPlayerModule.manager.isInvalid():
+                self.assistantMsgLabel.setText('음악을 재생할 수 없습니다')
+                return
+
+            if checkWifiConnection():
+                alertDialog = AlertDialog(title='인터넷 연결 장애', msg='인터넷 연결이 원활하지 않습니다', timeout=3, parent=self)
+                alertDialog.exec_()
+                return
+
             if len(token['args']) > 0:
                 self.assistantMsgLabel.setText(token['args'][0])
 
@@ -865,6 +900,11 @@ class MyApp(QWidget):
                 self.musicPlayerModule.manager.movePrev()
 
         elif token['type'] == 'play_music_by_keyword':
+            if checkWifiConnection():
+                alertDialog = AlertDialog(title='인터넷 연결 장애', msg='인터넷 연결이 원활하지 않습니다', timeout=3, parent=self)
+                alertDialog.exec_()
+                return
+
             if not self.musicPlayerModule.manager.isStopped():
                 self.musicPlayerModule.manager.pause()
             self.musicPlayerModule.manager.search(token['args'][1])
@@ -872,6 +912,11 @@ class MyApp(QWidget):
             self.assistantMsgLabel.setText(token['args'][0])
 
         elif token['type'] == 'play_music_by_emotion':
+            if checkWifiConnection():
+                alertDialog = AlertDialog(title='인터넷 연결 장애', msg='인터넷 연결이 원활하지 않습니다', timeout=3, parent=self)
+                alertDialog.exec_()
+                return
+
             if len(token['args']) > 0:
                 self.assistantMsgLabel.setText(token['args'][0])
 
@@ -896,6 +941,11 @@ class MyApp(QWidget):
             alertDialog.exec_()
 
         elif token['type'] == 'moisture':
+            if checkWifiConnection():
+                alertDialog = AlertDialog(title='인터넷 연결 장애', msg='인터넷 연결이 원활하지 않습니다', timeout=3, parent=self)
+                alertDialog.exec_()
+                return
+
             msg = ""
             measured_results = []
             error_flag = False
@@ -937,6 +987,11 @@ class MyApp(QWidget):
             alertDialog.exec_()
 
         elif token['type'] == 'style':
+            if checkWifiConnection():
+                alertDialog = AlertDialog(title='인터넷 연결 장애', msg='인터넷 연결이 원활하지 않습니다', timeout=3, parent=self)
+                alertDialog.exec_()
+                return
+
             msg = ""
             results = None
 
@@ -963,6 +1018,11 @@ class MyApp(QWidget):
             alertDialog.exec_()
         
         elif token['type'] == 'assistant':
+            if checkWifiConnection():
+                alertDialog = AlertDialog(title='인터넷 연결 장애', msg='인터넷 연결이 원활하지 않습니다', timeout=3, parent=self)
+                alertDialog.exec_()
+                return
+
             self.assistantThread.trigger()
 
         elif token['type'] == 'assistant_msg':
